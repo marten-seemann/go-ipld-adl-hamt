@@ -40,15 +40,15 @@ func init() {
 			"List",
 			"Link",
 		},
-		schema.SpawnUnionRepresentationKeyed(map[string]schema.TypeName{ // FIXME: this should be kinded
-			"bool":   "Bool",
-			"int":    "Int",
-			"float":  "Float",
-			"string": "String",
-			"bytes":  "Bytes",
-			"map":    "Map",
-			"list":   "List",
-			"link":   "Link",
+		schema.SpawnUnionRepresentationKinded(map[ipld.ReprKind]schema.TypeName{
+			ipld.ReprKind_Bool:   "Bool",
+			ipld.ReprKind_Int:    "Int",
+			ipld.ReprKind_Float:  "Float",
+			ipld.ReprKind_String: "String",
+			ipld.ReprKind_Bytes:  "Bytes",
+			ipld.ReprKind_Map:    "Map",
+			ipld.ReprKind_List:   "List",
+			ipld.ReprKind_Link:   "Link",
 		}),
 	))
 
