@@ -161,21 +161,21 @@ func (itr *_Any__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 	}
 	switch n2 := itr.n.x.(type) {
 	case Bool:
-		return &memberName__Any_Bool, n2, nil
+		k, v = &memberName__Any_Bool, n2
 	case Int:
-		return &memberName__Any_Int, n2, nil
+		k, v = &memberName__Any_Int, n2
 	case Float:
-		return &memberName__Any_Float, n2, nil
+		k, v = &memberName__Any_Float, n2
 	case String:
-		return &memberName__Any_String, n2, nil
+		k, v = &memberName__Any_String, n2
 	case Bytes:
-		return &memberName__Any_Bytes, n2, nil
+		k, v = &memberName__Any_Bytes, n2
 	case Map:
-		return &memberName__Any_Map, n2, nil
+		k, v = &memberName__Any_Map, n2
 	case List:
-		return &memberName__Any_List, n2, nil
+		k, v = &memberName__Any_List, n2
 	case Link:
-		return &memberName__Any_Link, n2, nil
+		k, v = &memberName__Any_Link, n2
 	default:
 		panic("unreachable")
 	}
@@ -299,6 +299,7 @@ func (na *_Any__Assembler) reset() {
 	default:
 		panic("unreachable")
 	}
+	na.ca = 0
 	na.cm = schema.Maybe_Absent
 }
 func (na *_Any__Assembler) BeginMap(int) (ipld.MapAssembler, error) {
@@ -757,157 +758,145 @@ func (n Any) Representation() ipld.Node {
 
 type _Any__Repr _Any
 
-var (
-	memberName__Any_Bool_serial   = _String{"bool"}
-	memberName__Any_Int_serial    = _String{"int"}
-	memberName__Any_Float_serial  = _String{"float"}
-	memberName__Any_String_serial = _String{"string"}
-	memberName__Any_Bytes_serial  = _String{"bytes"}
-	memberName__Any_Map_serial    = _String{"map"}
-	memberName__Any_List_serial   = _String{"list"}
-	memberName__Any_Link_serial   = _String{"link"}
-)
 var _ ipld.Node = &_Any__Repr{}
 
-func (_Any__Repr) ReprKind() ipld.ReprKind {
-	return ipld.ReprKind_Map
-}
-func (n *_Any__Repr) LookupByString(key string) (ipld.Node, error) {
-	switch key {
-	case "bool":
-		if n2, ok := n.x.(Bool); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "int":
-		if n2, ok := n.x.(Int); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "float":
-		if n2, ok := n.x.(Float); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "string":
-		if n2, ok := n.x.(String); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "bytes":
-		if n2, ok := n.x.(Bytes); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "map":
-		if n2, ok := n.x.(Map); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "list":
-		if n2, ok := n.x.(List); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	case "link":
-		if n2, ok := n.x.(Link); ok {
-			return n2.Representation(), nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
-	default:
-		return nil, schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfString(key)}
-	}
-}
-func (n *_Any__Repr) LookupByNode(key ipld.Node) (ipld.Node, error) {
-	ks, err := key.AsString()
-	if err != nil {
-		return nil, err
-	}
-	return n.LookupByString(ks)
-}
-func (_Any__Repr) LookupByIndex(idx int) (ipld.Node, error) {
-	return mixins.Map{"hamt.Any.Repr"}.LookupByIndex(0)
-}
-func (n _Any__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
-	return n.LookupByString(seg.String())
-}
-func (n *_Any__Repr) MapIterator() ipld.MapIterator {
-	return &_Any__ReprMapItr{n, false}
-}
-
-type _Any__ReprMapItr struct {
-	n    *_Any__Repr
-	done bool
-}
-
-func (itr *_Any__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
-	if itr.done {
-		return nil, nil, ipld.ErrIteratorOverread{}
-	}
-	switch n2 := itr.n.x.(type) {
+func (n *_Any__Repr) ReprKind() ipld.ReprKind {
+	switch n.x.(type) {
 	case Bool:
-		return &memberName__Any_Bool_serial, n2.Representation(), nil
+		return ipld.ReprKind_Bool
 	case Int:
-		return &memberName__Any_Int_serial, n2.Representation(), nil
+		return ipld.ReprKind_Int
 	case Float:
-		return &memberName__Any_Float_serial, n2.Representation(), nil
+		return ipld.ReprKind_Float
 	case String:
-		return &memberName__Any_String_serial, n2.Representation(), nil
+		return ipld.ReprKind_String
 	case Bytes:
-		return &memberName__Any_Bytes_serial, n2.Representation(), nil
+		return ipld.ReprKind_Bytes
 	case Map:
-		return &memberName__Any_Map_serial, n2.Representation(), nil
+		return ipld.ReprKind_Map
 	case List:
-		return &memberName__Any_List_serial, n2.Representation(), nil
+		return ipld.ReprKind_List
 	case Link:
-		return &memberName__Any_Link_serial, n2.Representation(), nil
+		return ipld.ReprKind_Link
 	default:
 		panic("unreachable")
 	}
-	itr.done = true
-	return
 }
-func (itr *_Any__ReprMapItr) Done() bool {
-	return itr.done
+func (n *_Any__Repr) LookupByString(key string) (ipld.Node, error) {
+	switch n2 := n.x.(type) {
+	case Map:
+		return n2.Representation().LookupByString(key)
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "LookupByString", AppropriateKind: ipld.ReprKindSet_JustMap, ActualKind: n.ReprKind()}
+	}
 }
-
-func (_Any__Repr) ListIterator() ipld.ListIterator {
-	return nil
+func (n *_Any__Repr) LookupByNode(key ipld.Node) (ipld.Node, error) {
+	switch n2 := n.x.(type) {
+	case Map:
+		return n2.Representation().LookupByNode(key)
+	case List:
+		return n2.Representation().LookupByNode(key)
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "LookupByNode", AppropriateKind: ipld.ReprKindSet_Recursive, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) Length() int {
-	return 1
+func (n *_Any__Repr) LookupByIndex(idx int) (ipld.Node, error) {
+	switch n2 := n.x.(type) {
+	case List:
+		return n2.Representation().LookupByIndex(idx)
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "LookupByIndex", AppropriateKind: ipld.ReprKindSet_JustList, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) IsAbsent() bool {
+func (n *_Any__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
+	switch n2 := n.x.(type) {
+	case Map:
+		return n2.Representation().LookupBySegment(seg)
+	case List:
+		return n2.Representation().LookupBySegment(seg)
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "LookupBySegment", AppropriateKind: ipld.ReprKindSet_Recursive, ActualKind: n.ReprKind()}
+	}
+}
+func (n *_Any__Repr) MapIterator() ipld.MapIterator {
+	switch n2 := n.x.(type) {
+	case Map:
+		return n2.Representation().MapIterator()
+	default:
+		return nil
+	}
+}
+func (n *_Any__Repr) ListIterator() ipld.ListIterator {
+	switch n2 := n.x.(type) {
+	case List:
+		return n2.Representation().ListIterator()
+	default:
+		return nil
+	}
+}
+func (n *_Any__Repr) Length() int {
+	switch n2 := n.x.(type) {
+	case Map:
+		return n2.Representation().Length()
+	case List:
+		return n2.Representation().Length()
+	default:
+		return -1
+	}
+}
+func (n *_Any__Repr) IsAbsent() bool {
 	return false
 }
-func (_Any__Repr) IsNull() bool {
+func (n *_Any__Repr) IsNull() bool {
 	return false
 }
-func (_Any__Repr) AsBool() (bool, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsBool()
+func (n *_Any__Repr) AsBool() (bool, error) {
+	switch n2 := n.x.(type) {
+	case Bool:
+		return n2.Representation().AsBool()
+	default:
+		return false, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsBool", AppropriateKind: ipld.ReprKindSet_JustBool, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) AsInt() (int, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsInt()
+func (n *_Any__Repr) AsInt() (int, error) {
+	switch n2 := n.x.(type) {
+	case Int:
+		return n2.Representation().AsInt()
+	default:
+		return 0, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsInt", AppropriateKind: ipld.ReprKindSet_JustInt, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) AsFloat() (float64, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsFloat()
+func (n *_Any__Repr) AsFloat() (float64, error) {
+	switch n2 := n.x.(type) {
+	case Float:
+		return n2.Representation().AsFloat()
+	default:
+		return 0, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsFloat", AppropriateKind: ipld.ReprKindSet_JustFloat, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) AsString() (string, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsString()
+func (n *_Any__Repr) AsString() (string, error) {
+	switch n2 := n.x.(type) {
+	case String:
+		return n2.Representation().AsString()
+	default:
+		return "", ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsString", AppropriateKind: ipld.ReprKindSet_JustString, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) AsBytes() ([]byte, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsBytes()
+func (n *_Any__Repr) AsBytes() ([]byte, error) {
+	switch n2 := n.x.(type) {
+	case Bytes:
+		return n2.Representation().AsBytes()
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsBytes", AppropriateKind: ipld.ReprKindSet_JustBytes, ActualKind: n.ReprKind()}
+	}
 }
-func (_Any__Repr) AsLink() (ipld.Link, error) {
-	return mixins.Map{"hamt.Any.Repr"}.AsLink()
+func (n *_Any__Repr) AsLink() (ipld.Link, error) {
+	switch n2 := n.x.(type) {
+	case Link:
+		return n2.Representation().AsLink()
+	default:
+		return nil, ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AsLink", AppropriateKind: ipld.ReprKindSet_JustLink, ActualKind: n.ReprKind()}
+	}
 }
 func (_Any__Repr) Prototype() ipld.NodePrototype {
 	return _Any__ReprPrototype{}
@@ -938,109 +927,220 @@ func (nb *_Any__ReprBuilder) Reset() {
 }
 
 type _Any__ReprAssembler struct {
-	w     *_Any
-	m     *schema.Maybe
-	state maState
-
-	cm  schema.Maybe
+	w   *_Any
+	m   *schema.Maybe
 	ca1 *_Bool__ReprAssembler
-
 	ca2 *_Int__ReprAssembler
-
 	ca3 *_Float__ReprAssembler
-
 	ca4 *_String__ReprAssembler
-
 	ca5 *_Bytes__ReprAssembler
-
 	ca6 *_Map__ReprAssembler
-
 	ca7 *_List__ReprAssembler
-
 	ca8 *_Link__ReprAssembler
 	ca  uint
 }
 
 func (na *_Any__ReprAssembler) reset() {
-	na.state = maState_initial
 	switch na.ca {
 	case 0:
 		return
 	case 1:
 		na.ca1.reset()
-
 	case 2:
 		na.ca2.reset()
-
 	case 3:
 		na.ca3.reset()
-
 	case 4:
 		na.ca4.reset()
-
 	case 5:
 		na.ca5.reset()
-
 	case 6:
 		na.ca6.reset()
-
 	case 7:
 		na.ca7.reset()
-
 	case 8:
 		na.ca8.reset()
 	default:
 		panic("unreachable")
 	}
-	na.cm = schema.Maybe_Absent
+	na.ca = 0
 }
-func (na *_Any__ReprAssembler) BeginMap(int) (ipld.MapAssembler, error) {
+func (na *_Any__ReprAssembler) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
 	switch *na.m {
 	case schema.Maybe_Value, schema.Maybe_Null:
 		panic("invalid state: cannot assign into assembler that's already finished")
 	case midvalue:
-		panic("invalid state: it makes no sense to 'begin' twice on the same assembler!")
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
 	}
-	*na.m = midvalue
 	if na.w == nil {
 		na.w = &_Any{}
 	}
-	return na, nil
+	na.ca = 6
+	x := &_Map{}
+	na.w.x = x
+	if na.ca6 == nil {
+		na.ca6 = &_Map__ReprAssembler{}
+	}
+	na.ca6.w = x
+	na.ca6.m = na.m
+	return na.ca6.BeginMap(sizeHint)
+	return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "BeginMap called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.BeginList(0)
-}
-func (na *_Any__ReprAssembler) AssignNull() error {
+func (na *_Any__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
 	switch *na.m {
-	case allowNull:
-		*na.m = schema.Maybe_Null
-		return nil
-	case schema.Maybe_Absent:
-		return mixins.MapAssembler{"hamt.Any.Repr.Repr"}.AssignNull()
 	case schema.Maybe_Value, schema.Maybe_Null:
 		panic("invalid state: cannot assign into assembler that's already finished")
 	case midvalue:
-		panic("invalid state: cannot assign null into an assembler that's already begun working on recursive structures!")
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
 	}
-	panic("unreachable")
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 7
+	x := &_List{}
+	na.w.x = x
+	if na.ca7 == nil {
+		na.ca7 = &_List__ReprAssembler{}
+	}
+	na.ca7.w = x
+	na.ca7.m = na.m
+	return na.ca7.BeginList(sizeHint)
+	return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "BeginList called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignBool(bool) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignBool(false)
+func (na *_Any__ReprAssembler) AssignNull() error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignNull called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignInt(int) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignInt(0)
+func (na *_Any__ReprAssembler) AssignBool(v bool) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 1
+	x := &_Bool{}
+	na.w.x = x
+	if na.ca1 == nil {
+		na.ca1 = &_Bool__ReprAssembler{}
+	}
+	na.ca1.w = x
+	na.ca1.m = na.m
+	return na.ca1.AssignBool(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignBool called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignFloat(float64) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignFloat(0)
+func (na *_Any__ReprAssembler) AssignInt(v int) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 2
+	x := &_Int{}
+	na.w.x = x
+	if na.ca2 == nil {
+		na.ca2 = &_Int__ReprAssembler{}
+	}
+	na.ca2.w = x
+	na.ca2.m = na.m
+	return na.ca2.AssignInt(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignInt called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignString(string) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignString("")
+func (na *_Any__ReprAssembler) AssignFloat(v float64) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 3
+	x := &_Float{}
+	na.w.x = x
+	if na.ca3 == nil {
+		na.ca3 = &_Float__ReprAssembler{}
+	}
+	na.ca3.w = x
+	na.ca3.m = na.m
+	return na.ca3.AssignFloat(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignFloat called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignBytes([]byte) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignBytes(nil)
+func (na *_Any__ReprAssembler) AssignString(v string) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 4
+	x := &_String{}
+	na.w.x = x
+	if na.ca4 == nil {
+		na.ca4 = &_String__ReprAssembler{}
+	}
+	na.ca4.w = x
+	na.ca4.m = na.m
+	return na.ca4.AssignString(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignString called but is not valid for any of the kinds that are valid members of this union"}
 }
-func (_Any__ReprAssembler) AssignLink(ipld.Link) error {
-	return mixins.MapAssembler{"hamt.Any.Repr"}.AssignLink(nil)
+func (na *_Any__ReprAssembler) AssignBytes(v []byte) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 5
+	x := &_Bytes{}
+	na.w.x = x
+	if na.ca5 == nil {
+		na.ca5 = &_Bytes__ReprAssembler{}
+	}
+	na.ca5.w = x
+	na.ca5.m = na.m
+	return na.ca5.AssignBytes(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignBytes called but is not valid for any of the kinds that are valid members of this union"}
+}
+func (na *_Any__ReprAssembler) AssignLink(v ipld.Link) error {
+	switch *na.m {
+	case schema.Maybe_Value, schema.Maybe_Null:
+		panic("invalid state: cannot assign into assembler that's already finished")
+	case midvalue:
+		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
+	}
+	if na.w == nil {
+		na.w = &_Any{}
+	}
+	na.ca = 8
+	x := &_Link{}
+	na.w.x = x
+	if na.ca8 == nil {
+		na.ca8 = &_Link__ReprAssembler{}
+	}
+	na.ca8.w = x
+	na.ca8.m = na.m
+	return na.ca8.AssignLink(v)
+	return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "AssignLink called but is not valid for any of the kinds that are valid members of this union"}
 }
 func (na *_Any__ReprAssembler) AssignNode(v ipld.Node) error {
 	if v.IsNull() {
@@ -1062,382 +1162,64 @@ func (na *_Any__ReprAssembler) AssignNode(v ipld.Node) error {
 		*na.m = schema.Maybe_Value
 		return nil
 	}
-	if v.ReprKind() != ipld.ReprKind_Map {
-		return ipld.ErrWrongKind{TypeName: "hamt.Any.Repr", MethodName: "AssignNode", AppropriateKind: ipld.ReprKindSet_JustMap, ActualKind: v.ReprKind()}
-	}
-	itr := v.MapIterator()
-	for !itr.Done() {
-		k, v, err := itr.Next()
+	switch v.ReprKind() {
+	case ipld.ReprKind_Bool:
+		v2, _ := v.AsBool()
+		return na.AssignBool(v2)
+	case ipld.ReprKind_Int:
+		v2, _ := v.AsInt()
+		return na.AssignInt(v2)
+	case ipld.ReprKind_Float:
+		v2, _ := v.AsFloat()
+		return na.AssignFloat(v2)
+	case ipld.ReprKind_String:
+		v2, _ := v.AsString()
+		return na.AssignString(v2)
+	case ipld.ReprKind_Bytes:
+		v2, _ := v.AsBytes()
+		return na.AssignBytes(v2)
+	case ipld.ReprKind_Map:
+		na, err := na.BeginMap(v.Length())
 		if err != nil {
 			return err
 		}
-		if err := na.AssembleKey().AssignNode(k); err != nil {
+		itr := v.MapIterator()
+		for !itr.Done() {
+			k, v, err := itr.Next()
+			if err != nil {
+				return err
+			}
+			if err := na.AssembleKey().AssignNode(k); err != nil {
+				return err
+			}
+			if err := na.AssembleValue().AssignNode(v); err != nil {
+				return err
+			}
+		}
+		return na.Finish()
+	case ipld.ReprKind_List:
+		na, err := na.BeginList(v.Length())
+		if err != nil {
 			return err
 		}
-		if err := na.AssembleValue().AssignNode(v); err != nil {
-			return err
+		itr := v.ListIterator()
+		for !itr.Done() {
+			_, v, err := itr.Next()
+			if err != nil {
+				return err
+			}
+			if err := na.AssembleValue().AssignNode(v); err != nil {
+				return err
+			}
 		}
-	}
-	return na.Finish()
-}
-func (_Any__ReprAssembler) Prototype() ipld.NodePrototype {
-	return _Any__ReprPrototype{}
-}
-func (ma *_Any__ReprAssembler) valueFinishTidy() bool {
-	switch ma.cm {
-	case schema.Maybe_Value:
-		ma.state = maState_initial
-		return true
-	default:
-		return false
-	}
-}
-func (ma *_Any__ReprAssembler) AssembleEntry(k string) (ipld.NodeAssembler, error) {
-	switch ma.state {
-	case maState_initial:
-		// carry on
-	case maState_midKey:
-		panic("invalid state: AssembleEntry cannot be called when in the middle of assembling another key")
-	case maState_expectValue:
-		panic("invalid state: AssembleEntry cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
-			panic("invalid state: AssembleEntry cannot be called when in the middle of assembling a value")
-		} // if tidy success: carry on for the moment, but we'll still be erroring shortly.
-	case maState_finished:
-		panic("invalid state: AssembleEntry cannot be called on an assembler that's already finished")
-	}
-	if ma.ca != 0 {
-		return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "cannot add another entry -- a union can only contain one thing!"}
-	}
-	switch k {
-	case "bool":
-		ma.state = maState_midValue
-		ma.ca = 1
-		x := &_Bool{}
-		ma.w.x = x
-		if ma.ca1 == nil {
-			ma.ca1 = &_Bool__ReprAssembler{}
-		}
-		ma.ca1.w = x
-		ma.ca1.m = &ma.cm
-		return ma.ca1, nil
-	case "int":
-		ma.state = maState_midValue
-		ma.ca = 2
-		x := &_Int{}
-		ma.w.x = x
-		if ma.ca2 == nil {
-			ma.ca2 = &_Int__ReprAssembler{}
-		}
-		ma.ca2.w = x
-		ma.ca2.m = &ma.cm
-		return ma.ca2, nil
-	case "float":
-		ma.state = maState_midValue
-		ma.ca = 3
-		x := &_Float{}
-		ma.w.x = x
-		if ma.ca3 == nil {
-			ma.ca3 = &_Float__ReprAssembler{}
-		}
-		ma.ca3.w = x
-		ma.ca3.m = &ma.cm
-		return ma.ca3, nil
-	case "string":
-		ma.state = maState_midValue
-		ma.ca = 4
-		x := &_String{}
-		ma.w.x = x
-		if ma.ca4 == nil {
-			ma.ca4 = &_String__ReprAssembler{}
-		}
-		ma.ca4.w = x
-		ma.ca4.m = &ma.cm
-		return ma.ca4, nil
-	case "bytes":
-		ma.state = maState_midValue
-		ma.ca = 5
-		x := &_Bytes{}
-		ma.w.x = x
-		if ma.ca5 == nil {
-			ma.ca5 = &_Bytes__ReprAssembler{}
-		}
-		ma.ca5.w = x
-		ma.ca5.m = &ma.cm
-		return ma.ca5, nil
-	case "map":
-		ma.state = maState_midValue
-		ma.ca = 6
-		x := &_Map{}
-		ma.w.x = x
-		if ma.ca6 == nil {
-			ma.ca6 = &_Map__ReprAssembler{}
-		}
-		ma.ca6.w = x
-		ma.ca6.m = &ma.cm
-		return ma.ca6, nil
-	case "list":
-		ma.state = maState_midValue
-		ma.ca = 7
-		x := &_List{}
-		ma.w.x = x
-		if ma.ca7 == nil {
-			ma.ca7 = &_List__ReprAssembler{}
-		}
-		ma.ca7.w = x
-		ma.ca7.m = &ma.cm
-		return ma.ca7, nil
-	case "link":
-		ma.state = maState_midValue
-		ma.ca = 8
-		x := &_Link{}
-		ma.w.x = x
-		if ma.ca8 == nil {
-			ma.ca8 = &_Link__ReprAssembler{}
-		}
-		ma.ca8.w = x
-		ma.ca8.m = &ma.cm
-		return ma.ca8, nil
-	default:
-		return nil, ipld.ErrInvalidKey{TypeName: "hamt.Any.Repr", Key: &_String{k}}
-	}
-}
-func (ma *_Any__ReprAssembler) AssembleKey() ipld.NodeAssembler {
-	switch ma.state {
-	case maState_initial:
-		// carry on
-	case maState_midKey:
-		panic("invalid state: AssembleKey cannot be called when in the middle of assembling another key")
-	case maState_expectValue:
-		panic("invalid state: AssembleKey cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
-			panic("invalid state: AssembleKey cannot be called when in the middle of assembling a value")
-		} // if tidy success: carry on for the moment, but we'll still be erroring shortly... or rather, the keyassembler will be.
-	case maState_finished:
-		panic("invalid state: AssembleKey cannot be called on an assembler that's already finished")
-	}
-	ma.state = maState_midKey
-	return (*_Any__ReprKeyAssembler)(ma)
-}
-func (ma *_Any__ReprAssembler) AssembleValue() ipld.NodeAssembler {
-	switch ma.state {
-	case maState_initial:
-		panic("invalid state: AssembleValue cannot be called when no key is primed")
-	case maState_midKey:
-		panic("invalid state: AssembleValue cannot be called when in the middle of assembling a key")
-	case maState_expectValue:
-		// carry on
-	case maState_midValue:
-		panic("invalid state: AssembleValue cannot be called when in the middle of assembling another value")
-	case maState_finished:
-		panic("invalid state: AssembleValue cannot be called on an assembler that's already finished")
-	}
-	ma.state = maState_midValue
-	switch ma.ca {
-	case 0:
-		x := &_Bool{}
-		ma.w.x = x
-		if ma.ca1 == nil {
-			ma.ca1 = &_Bool__ReprAssembler{}
-		}
-		ma.ca1.w = x
-		ma.ca1.m = &ma.cm
-		return ma.ca1
-	case 1:
-		x := &_Int{}
-		ma.w.x = x
-		if ma.ca2 == nil {
-			ma.ca2 = &_Int__ReprAssembler{}
-		}
-		ma.ca2.w = x
-		ma.ca2.m = &ma.cm
-		return ma.ca2
-	case 2:
-		x := &_Float{}
-		ma.w.x = x
-		if ma.ca3 == nil {
-			ma.ca3 = &_Float__ReprAssembler{}
-		}
-		ma.ca3.w = x
-		ma.ca3.m = &ma.cm
-		return ma.ca3
-	case 3:
-		x := &_String{}
-		ma.w.x = x
-		if ma.ca4 == nil {
-			ma.ca4 = &_String__ReprAssembler{}
-		}
-		ma.ca4.w = x
-		ma.ca4.m = &ma.cm
-		return ma.ca4
-	case 4:
-		x := &_Bytes{}
-		ma.w.x = x
-		if ma.ca5 == nil {
-			ma.ca5 = &_Bytes__ReprAssembler{}
-		}
-		ma.ca5.w = x
-		ma.ca5.m = &ma.cm
-		return ma.ca5
-	case 5:
-		x := &_Map{}
-		ma.w.x = x
-		if ma.ca6 == nil {
-			ma.ca6 = &_Map__ReprAssembler{}
-		}
-		ma.ca6.w = x
-		ma.ca6.m = &ma.cm
-		return ma.ca6
-	case 6:
-		x := &_List{}
-		ma.w.x = x
-		if ma.ca7 == nil {
-			ma.ca7 = &_List__ReprAssembler{}
-		}
-		ma.ca7.w = x
-		ma.ca7.m = &ma.cm
-		return ma.ca7
-	case 7:
-		x := &_Link{}
-		ma.w.x = x
-		if ma.ca8 == nil {
-			ma.ca8 = &_Link__ReprAssembler{}
-		}
-		ma.ca8.w = x
-		ma.ca8.m = &ma.cm
-		return ma.ca8
+		return na.Finish()
+	case ipld.ReprKind_Link:
+		v2, _ := v.AsLink()
+		return na.AssignLink(v2)
 	default:
 		panic("unreachable")
 	}
 }
-func (ma *_Any__ReprAssembler) Finish() error {
-	switch ma.state {
-	case maState_initial:
-		// carry on
-	case maState_midKey:
-		panic("invalid state: Finish cannot be called when in the middle of assembling a key")
-	case maState_expectValue:
-		panic("invalid state: Finish cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
-			panic("invalid state: Finish cannot be called when in the middle of assembling a value")
-		} // if tidy success: carry on
-	case maState_finished:
-		panic("invalid state: Finish cannot be called on an assembler that's already finished")
-	}
-	if ma.ca == 0 {
-		return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "a union must have exactly one entry (not none)!"}
-	}
-	ma.state = maState_finished
-	*ma.m = schema.Maybe_Value
-	return nil
-}
-func (ma *_Any__ReprAssembler) KeyPrototype() ipld.NodePrototype {
-	return _String__Prototype{}
-}
-func (ma *_Any__ReprAssembler) ValuePrototype(k string) ipld.NodePrototype {
-	switch k {
-	case "Bool":
-		return _Bool__ReprPrototype{}
-	case "Int":
-		return _Int__ReprPrototype{}
-	case "Float":
-		return _Float__ReprPrototype{}
-	case "String":
-		return _String__ReprPrototype{}
-	case "Bytes":
-		return _Bytes__ReprPrototype{}
-	case "Map":
-		return _Map__ReprPrototype{}
-	case "List":
-		return _List__ReprPrototype{}
-	case "Link":
-		return _Link__ReprPrototype{}
-	default:
-		return nil
-	}
-}
-
-type _Any__ReprKeyAssembler _Any__ReprAssembler
-
-func (_Any__ReprKeyAssembler) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.BeginMap(0)
-}
-func (_Any__ReprKeyAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.BeginList(0)
-}
-func (na *_Any__ReprKeyAssembler) AssignNull() error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignNull()
-}
-func (_Any__ReprKeyAssembler) AssignBool(bool) error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignBool(false)
-}
-func (_Any__ReprKeyAssembler) AssignInt(int) error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignInt(0)
-}
-func (_Any__ReprKeyAssembler) AssignFloat(float64) error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignFloat(0)
-}
-func (ka *_Any__ReprKeyAssembler) AssignString(k string) error {
-	if ka.state != maState_midKey {
-		panic("misuse: KeyAssembler held beyond its valid lifetime")
-	}
-	if ka.ca != 0 {
-		return schema.ErrNotUnionStructure{TypeName: "hamt.Any.Repr", Detail: "cannot add another entry -- a union can only contain one thing!"}
-	}
-	switch k {
-	case "bool":
-		ka.ca = 1
-		ka.state = maState_expectValue
-		return nil
-	case "int":
-		ka.ca = 2
-		ka.state = maState_expectValue
-		return nil
-	case "float":
-		ka.ca = 3
-		ka.state = maState_expectValue
-		return nil
-	case "string":
-		ka.ca = 4
-		ka.state = maState_expectValue
-		return nil
-	case "bytes":
-		ka.ca = 5
-		ka.state = maState_expectValue
-		return nil
-	case "map":
-		ka.ca = 6
-		ka.state = maState_expectValue
-		return nil
-	case "list":
-		ka.ca = 7
-		ka.state = maState_expectValue
-		return nil
-	case "link":
-		ka.ca = 8
-		ka.state = maState_expectValue
-		return nil
-	default:
-		return ipld.ErrInvalidKey{TypeName: "hamt.Any.Repr", Key: &_String{k}} // TODO: error quality: ErrInvalidUnionDiscriminant ?
-	}
-	return nil
-}
-func (_Any__ReprKeyAssembler) AssignBytes([]byte) error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignBytes(nil)
-}
-func (_Any__ReprKeyAssembler) AssignLink(ipld.Link) error {
-	return mixins.StringAssembler{"hamt.Any.Repr.KeyAssembler"}.AssignLink(nil)
-}
-func (ka *_Any__ReprKeyAssembler) AssignNode(v ipld.Node) error {
-	if v2, err := v.AsString(); err != nil {
-		return err
-	} else {
-		return ka.AssignString(v2)
-	}
-}
-func (_Any__ReprKeyAssembler) Prototype() ipld.NodePrototype {
-	return _String__Prototype{}
+func (na *_Any__ReprAssembler) Prototype() ipld.NodePrototype {
+	return _Any__ReprPrototype{}
 }

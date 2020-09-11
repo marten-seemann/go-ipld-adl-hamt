@@ -120,9 +120,9 @@ func (itr *_Pointer__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 	}
 	switch itr.n.tag {
 	case 1:
-		return &memberName__Pointer_Bucket, &itr.n.x1, nil
+		k, v = &memberName__Pointer_Bucket, &itr.n.x1
 	case 2:
-		return &memberName__Pointer_Link__InteriorNode, &itr.n.x2, nil
+		k, v = &memberName__Pointer_Link__InteriorNode, &itr.n.x2
 	default:
 		panic("unreachable")
 	}
@@ -216,6 +216,7 @@ func (na *_Pointer__Assembler) reset() {
 	default:
 		panic("unreachable")
 	}
+	na.ca = 0
 	na.cm = schema.Maybe_Absent
 }
 func (na *_Pointer__Assembler) BeginMap(int) (ipld.MapAssembler, error) {
@@ -503,8 +504,8 @@ func (n Pointer) Representation() ipld.Node {
 type _Pointer__Repr _Pointer
 
 var (
-	memberName__Pointer_Bucket_serial             = _String{"0"}
-	memberName__Pointer_Link__InteriorNode_serial = _String{"1"}
+	memberName__Pointer_Bucket_serial             = _String{"1"}
+	memberName__Pointer_Link__InteriorNode_serial = _String{"0"}
 )
 var _ ipld.Node = &_Pointer__Repr{}
 
@@ -513,12 +514,12 @@ func (_Pointer__Repr) ReprKind() ipld.ReprKind {
 }
 func (n *_Pointer__Repr) LookupByString(key string) (ipld.Node, error) {
 	switch key {
-	case "0":
+	case "1":
 		if n.tag != 1 {
 			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
 		}
 		return n.x1.Representation(), nil
-	case "1":
+	case "0":
 		if n.tag != 2 {
 			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
 		}
@@ -555,9 +556,9 @@ func (itr *_Pointer__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 	}
 	switch itr.n.tag {
 	case 1:
-		return &memberName__Pointer_Bucket_serial, itr.n.x1.Representation(), nil
+		k, v = &memberName__Pointer_Bucket_serial, itr.n.x1.Representation()
 	case 2:
-		return &memberName__Pointer_Link__InteriorNode_serial, itr.n.x2.Representation(), nil
+		k, v = &memberName__Pointer_Link__InteriorNode_serial, itr.n.x2.Representation()
 	default:
 		panic("unreachable")
 	}
@@ -651,6 +652,7 @@ func (na *_Pointer__ReprAssembler) reset() {
 	default:
 		panic("unreachable")
 	}
+	na.ca = 0
 	na.cm = schema.Maybe_Absent
 }
 func (na *_Pointer__ReprAssembler) BeginMap(int) (ipld.MapAssembler, error) {
@@ -770,14 +772,14 @@ func (ma *_Pointer__ReprAssembler) AssembleEntry(k string) (ipld.NodeAssembler, 
 		return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Pointer.Repr", Detail: "cannot add another entry -- a union can only contain one thing!"}
 	}
 	switch k {
-	case "0":
+	case "1":
 		ma.state = maState_midValue
 		ma.ca = 1
 		ma.w.tag = 1
 		ma.ca1.w = &ma.w.x1
 		ma.ca1.m = &ma.cm
 		return &ma.ca1, nil
-	case "1":
+	case "0":
 		ma.state = maState_midValue
 		ma.ca = 2
 		ma.w.tag = 2
@@ -897,12 +899,12 @@ func (ka *_Pointer__ReprKeyAssembler) AssignString(k string) error {
 		return schema.ErrNotUnionStructure{TypeName: "hamt.Pointer.Repr", Detail: "cannot add another entry -- a union can only contain one thing!"}
 	}
 	switch k {
-	case "0":
+	case "1":
 		ka.ca = 1
 		ka.w.tag = 1
 		ka.state = maState_expectValue
 		return nil
-	case "1":
+	case "0":
 		ka.ca = 2
 		ka.w.tag = 2
 		ka.state = maState_expectValue
