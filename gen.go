@@ -1,13 +1,16 @@
-package hamtregen
+// +build ignore
+
+package main
 
 import (
 	"fmt"
 
+	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/schema"
 	gengo "github.com/ipld/go-ipld-prime/schema/gen/go"
 )
 
-func init() {
+func main() {
 	ts := schema.TypeSystem{}
 	ts.Init()
 	adjCfg := &gengo.AdjunctCfg{
@@ -94,5 +97,5 @@ func init() {
 		panic("not happening")
 	}
 
-	gengo.Generate("..", "hamt", ts, adjCfg)
+	gengo.Generate(".", "hamt", ts, adjCfg)
 }
