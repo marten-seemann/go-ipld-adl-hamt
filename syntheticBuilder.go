@@ -41,18 +41,23 @@ type assembler struct {
 func (a assembler) AssembleKey() ipld.NodeAssembler {
 	return nil
 }
+
 func (a assembler) AssembleValue() ipld.NodeAssembler {
 	return nil
 }
+
 func (a assembler) AssembleEntry(k string) (ipld.NodeAssembler, error) {
 	return nil, nil
 }
+
 func (a assembler) Finish() error {
 	return nil
 }
+
 func (a assembler) KeyPrototype() ipld.NodePrototype {
 	return _Bytes__Prototype{}
 }
+
 func (a assembler) ValuePrototype(k string) ipld.NodePrototype {
 	return _Any__Prototype{}
 }

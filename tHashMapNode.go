@@ -14,7 +14,7 @@ type _HashMapNode struct {
 }
 type HashMapNode = *_HashMapNode
 
-func (n _HashMapNode) Field_map() Bytes {
+func (n _HashMapNode) FieldMap() Bytes {
 	return &n._map
 }
 func (n _HashMapNode) FieldData() List__Element {
@@ -56,7 +56,7 @@ func (m MaybeHashMapNode) Must() HashMapNode {
 }
 
 var (
-	fieldName__HashMapNode__map = _String{"_map"}
+	fieldName__HashMapNode_Map  = _String{"map"}
 	fieldName__HashMapNode_Data = _String{"data"}
 )
 var _ ipld.Node = (HashMapNode)(&_HashMapNode{})
@@ -67,7 +67,7 @@ func (HashMapNode) ReprKind() ipld.ReprKind {
 }
 func (n HashMapNode) LookupByString(key string) (ipld.Node, error) {
 	switch key {
-	case "_map":
+	case "map":
 		return &n._map, nil
 	case "data":
 		return &n.data, nil
@@ -103,7 +103,7 @@ func (itr *_HashMapNode__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 	}
 	switch itr.idx {
 	case 0:
-		k = &fieldName__HashMapNode__map
+		k = &fieldName__HashMapNode_Map
 		v = &itr.n._map
 	case 1:
 		k = &fieldName__HashMapNode_Data
@@ -196,7 +196,7 @@ func (na *_HashMapNode__Assembler) reset() {
 }
 
 var (
-	fieldBit__HashMapNode__map        = 1 << 0
+	fieldBit__HashMapNode_Map         = 1 << 0
 	fieldBit__HashMapNode_Data        = 1 << 1
 	fieldBits__HashMapNode_sufficient = 0 + 1<<0 + 1<<1
 )
@@ -332,11 +332,11 @@ func (ma *_HashMapNode__Assembler) AssembleEntry(k string) (ipld.NodeAssembler, 
 		panic("invalid state: AssembleEntry cannot be called on an assembler that's already finished")
 	}
 	switch k {
-	case "_map":
-		if ma.s&fieldBit__HashMapNode__map != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode__map}
+	case "map":
+		if ma.s&fieldBit__HashMapNode_Map != 0 {
+			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map}
 		}
-		ma.s += fieldBit__HashMapNode__map
+		ma.s += fieldBit__HashMapNode_Map
 		ma.state = maState_midValue
 		ma.f = 0
 		ma.ca__map.w = &ma.w._map
@@ -453,11 +453,11 @@ func (ka *_HashMapNode__KeyAssembler) AssignString(k string) error {
 		panic("misuse: KeyAssembler held beyond its valid lifetime")
 	}
 	switch k {
-	case "_map":
-		if ka.s&fieldBit__HashMapNode__map != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode__map}
+	case "map":
+		if ka.s&fieldBit__HashMapNode_Map != 0 {
+			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map}
 		}
-		ka.s += fieldBit__HashMapNode__map
+		ka.s += fieldBit__HashMapNode_Map
 		ka.state = maState_expectValue
 		ka.f = 0
 	case "data":
@@ -498,7 +498,7 @@ func (n HashMapNode) Representation() ipld.Node {
 type _HashMapNode__Repr _HashMapNode
 
 var (
-	fieldName__HashMapNode__map_serial = _String{"_map"}
+	fieldName__HashMapNode_Map_serial  = _String{"map"}
 	fieldName__HashMapNode_Data_serial = _String{"data"}
 )
 var _ ipld.Node = &_HashMapNode__Repr{}
@@ -508,7 +508,7 @@ func (_HashMapNode__Repr) ReprKind() ipld.ReprKind {
 }
 func (n *_HashMapNode__Repr) LookupByString(key string) (ipld.Node, error) {
 	switch key {
-	case "_map":
+	case "map":
 		return n._map.Representation(), nil
 	case "data":
 		return n.data.Representation(), nil
@@ -544,7 +544,7 @@ func (itr *_HashMapNode__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) 
 	}
 	switch itr.idx {
 	case 0:
-		k = &fieldName__HashMapNode__map_serial
+		k = &fieldName__HashMapNode_Map_serial
 		v = itr.n._map.Representation()
 	case 1:
 		k = &fieldName__HashMapNode_Data_serial
@@ -764,11 +764,11 @@ func (ma *_HashMapNode__ReprAssembler) AssembleEntry(k string) (ipld.NodeAssembl
 		panic("invalid state: AssembleEntry cannot be called on an assembler that's already finished")
 	}
 	switch k {
-	case "_map":
-		if ma.s&fieldBit__HashMapNode__map != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode__map_serial}
+	case "map":
+		if ma.s&fieldBit__HashMapNode_Map != 0 {
+			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map_serial}
 		}
-		ma.s += fieldBit__HashMapNode__map
+		ma.s += fieldBit__HashMapNode_Map
 		ma.state = maState_midValue
 		ma.f = 0
 		ma.ca__map.w = &ma.w._map
@@ -885,11 +885,11 @@ func (ka *_HashMapNode__ReprKeyAssembler) AssignString(k string) error {
 		panic("misuse: KeyAssembler held beyond its valid lifetime")
 	}
 	switch k {
-	case "_map":
-		if ka.s&fieldBit__HashMapNode__map != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode__map_serial}
+	case "map":
+		if ka.s&fieldBit__HashMapNode_Map != 0 {
+			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map_serial}
 		}
-		ka.s += fieldBit__HashMapNode__map
+		ka.s += fieldBit__HashMapNode_Map
 		ka.state = maState_expectValue
 		ka.f = 0
 	case "data":

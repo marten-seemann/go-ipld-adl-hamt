@@ -18,6 +18,10 @@ func main() {
 		CfgUnionMemlayout: map[schema.TypeName]string{
 			"Any": "interface",
 		},
+		FieldSymbolLowerOverrides: map[gengo.FieldTuple]string{
+			{TypeName: "HashMapRoot", FieldName: "map"}: "_map",
+			{TypeName: "HashMapNode", FieldName: "map"}: "_map",
+		},
 	}
 
 	// Prelude.  (This is boilerplate; it will be injected automatically by the schema libraries in the future, but isn't yet.)
@@ -61,14 +65,14 @@ func main() {
 		[]schema.StructField{
 			schema.SpawnStructField("hashAlg", "String", false, false),
 			schema.SpawnStructField("bucketSize", "Int", false, false),
-			schema.SpawnStructField("_map", "Bytes", false, false),
+			schema.SpawnStructField("map", "Bytes", false, false),
 			schema.SpawnStructField("data", "List__Element", false, false),
 		},
 		schema.StructRepresentation_Map{},
 	))
 	ts.Accumulate(schema.SpawnStruct("HashMapNode",
 		[]schema.StructField{
-			schema.SpawnStructField("_map", "Bytes", false, false),
+			schema.SpawnStructField("map", "Bytes", false, false),
 			schema.SpawnStructField("data", "List__Element", false, false),
 		},
 		schema.StructRepresentation_Map{},
