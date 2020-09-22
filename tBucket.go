@@ -9,7 +9,7 @@ import (
 )
 
 type _Bucket struct {
-	x []_KV
+	x []_BucketEntry
 }
 type Bucket = *_Bucket
 type _Bucket__Maybe struct {
@@ -163,7 +163,7 @@ type _Bucket__Assembler struct {
 	state laState
 
 	cm schema.Maybe
-	va _KV__Assembler
+	va _BucketEntry__Assembler
 }
 
 func (na *_Bucket__Assembler) reset() {
@@ -188,7 +188,7 @@ func (na *_Bucket__Assembler) BeginList(sizeHint int) (ipld.ListAssembler, error
 		na.w = &_Bucket{}
 	}
 	if sizeHint > 0 {
-		na.w.x = make([]_KV, 0, sizeHint)
+		na.w.x = make([]_BucketEntry, 0, sizeHint)
 	}
 	return na, nil
 }
@@ -285,7 +285,7 @@ func (la *_Bucket__Assembler) AssembleValue() ipld.NodeAssembler {
 	case laState_finished:
 		panic("invalid state: AssembleValue cannot be called on an assembler that's already finished")
 	}
-	la.w.x = append(la.w.x, _KV{})
+	la.w.x = append(la.w.x, _BucketEntry{})
 	la.state = laState_midValue
 	row := &la.w.x[len(la.w.x)-1]
 	la.va.w = row
@@ -308,7 +308,7 @@ func (la *_Bucket__Assembler) Finish() error {
 	return nil
 }
 func (la *_Bucket__Assembler) ValuePrototype(_ int) ipld.NodePrototype {
-	return _KV__Prototype{}
+	return _BucketEntry__Prototype{}
 }
 func (Bucket) Type() schema.Type {
 	return nil /*TODO:typelit*/
@@ -332,14 +332,14 @@ func (nr *_Bucket__Repr) LookupByNode(k ipld.Node) (ipld.Node, error) {
 	if err != nil || v == ipld.Null {
 		return v, err
 	}
-	return v.(KV).Representation(), nil
+	return v.(BucketEntry).Representation(), nil
 }
 func (nr *_Bucket__Repr) LookupByIndex(idx int) (ipld.Node, error) {
 	v, err := (Bucket)(nr).LookupByIndex(idx)
 	if err != nil || v == ipld.Null {
 		return v, err
 	}
-	return v.(KV).Representation(), nil
+	return v.(BucketEntry).Representation(), nil
 }
 func (n _Bucket__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
 	i, err := seg.Index()
@@ -362,7 +362,7 @@ func (itr *_Bucket__ReprListItr) Next() (idx int, v ipld.Node, err error) {
 	if err != nil || v == ipld.Null {
 		return
 	}
-	return idx, v.(KV).Representation(), nil
+	return idx, v.(BucketEntry).Representation(), nil
 }
 func (itr *_Bucket__ReprListItr) Done() bool {
 	return (*_Bucket__ListItr)(itr).Done()
@@ -429,7 +429,7 @@ type _Bucket__ReprAssembler struct {
 	state laState
 
 	cm schema.Maybe
-	va _KV__ReprAssembler
+	va _BucketEntry__ReprAssembler
 }
 
 func (na *_Bucket__ReprAssembler) reset() {
@@ -454,7 +454,7 @@ func (na *_Bucket__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, e
 		na.w = &_Bucket{}
 	}
 	if sizeHint > 0 {
-		na.w.x = make([]_KV, 0, sizeHint)
+		na.w.x = make([]_BucketEntry, 0, sizeHint)
 	}
 	return na, nil
 }
@@ -551,7 +551,7 @@ func (la *_Bucket__ReprAssembler) AssembleValue() ipld.NodeAssembler {
 	case laState_finished:
 		panic("invalid state: AssembleValue cannot be called on an assembler that's already finished")
 	}
-	la.w.x = append(la.w.x, _KV{})
+	la.w.x = append(la.w.x, _BucketEntry{})
 	la.state = laState_midValue
 	row := &la.w.x[len(la.w.x)-1]
 	la.va.w = row
@@ -574,5 +574,5 @@ func (la *_Bucket__ReprAssembler) Finish() error {
 	return nil
 }
 func (la *_Bucket__ReprAssembler) ValuePrototype(_ int) ipld.NodePrototype {
-	return _KV__ReprPrototype{}
+	return _BucketEntry__ReprPrototype{}
 }

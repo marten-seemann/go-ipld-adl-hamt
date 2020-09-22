@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/schema"
@@ -55,46 +56,79 @@ func main() {
 		}),
 	))
 
-	// Interior structure of the HAMT ADL.
-	ts.Accumulate(schema.SpawnStruct("InteriorNode",
+	// The schema below follows https://github.com/ipld/specs/blob/master/data-structures/hashmap.md.
+	ts.Accumulate(schema.SpawnStruct("HashMapRoot",
 		[]schema.StructField{
-			schema.SpawnStructField("bitfield", "Bytes", false, false),
-			schema.SpawnStructField("pointers", "List__Pointer", false, false),
+			schema.SpawnStructField("hashAlg", "String", false, false),
+			schema.SpawnStructField("bucketSize", "Int", false, false),
+			schema.SpawnStructField("_map", "Bytes", false, false),
+			schema.SpawnStructField("data", "List__Element", false, false),
 		},
-		schema.StructRepresentation_Tuple{},
+		schema.StructRepresentation_Map{},
 	))
-	ts.Accumulate(schema.SpawnList("List__Pointer", // would be implicitly created by fields refering to a `[Pointer]` type, but our schema package is not this clever yet, so I've done it by hand.
-		"Pointer", false,
+	ts.Accumulate(schema.SpawnStruct("HashMapNode",
+		[]schema.StructField{
+			schema.SpawnStructField("_map", "Bytes", false, false),
+			schema.SpawnStructField("data", "List__Element", false, false),
+		},
+		schema.StructRepresentation_Map{},
 	))
-	ts.Accumulate(schema.SpawnUnion("Pointer",
+	ts.Accumulate(schema.SpawnList("List__Element",
+		"Element", false,
+	))
+	ts.Accumulate(schema.SpawnUnion("Element",
 		[]schema.TypeName{
+			"HashMapNode",
+			"Link__HashMapNode",
 			"Bucket",
-			"Link__InteriorNode",
 		},
-		schema.SpawnUnionRepresentationKeyed(map[string]schema.TypeName{ // FUTURE: will probably become kinded, but currently is keyed in this way in upstream spec.
-			"0": "Link__InteriorNode",
-			"1": "Bucket",
+		schema.SpawnUnionRepresentationKinded(map[ipld.ReprKind]schema.TypeName{
+			ipld.ReprKind_Map:  "HashMapNode",
+			ipld.ReprKind_Link: "Link__HashMapNode",
+			ipld.ReprKind_List: "Bucket",
 		}),
 	))
-	ts.Accumulate(schema.SpawnLinkReference("Link__InteriorNode", // would be implicitly created by fields refering to a `[InteriorNode]` type, but our schema package is not this clever yet, so I've done it by hand.
-		"InteriorNode",
+	ts.Accumulate(schema.SpawnLinkReference("Link__HashMapNode",
+		"HashMapNode",
 	))
 	ts.Accumulate(schema.SpawnList("Bucket",
-		"KV", false,
+		"BucketEntry", false,
 	))
-	ts.Accumulate(schema.SpawnStruct("KV",
+	ts.Accumulate(schema.SpawnStruct("BucketEntry",
 		[]schema.StructField{
 			schema.SpawnStructField("key", "Bytes", false, false),
-			schema.SpawnStructField("value", "Any", false, false),
+			schema.SpawnStructField("value", "Value", false, false),
 		},
 		schema.StructRepresentation_Tuple{},
+	))
+	ts.Accumulate(schema.SpawnUnion("Value",
+		[]schema.TypeName{
+			"Bool",
+			"Int",
+			"Float",
+			"String",
+			"Bytes",
+			"Map",
+			"List",
+			"Link",
+		},
+		schema.SpawnUnionRepresentationKinded(map[ipld.ReprKind]schema.TypeName{
+			ipld.ReprKind_Bool:   "Bool",
+			ipld.ReprKind_Int:    "Int",
+			ipld.ReprKind_Float:  "Float",
+			ipld.ReprKind_String: "String",
+			ipld.ReprKind_Bytes:  "Bytes",
+			ipld.ReprKind_Map:    "Map",
+			ipld.ReprKind_List:   "List",
+			ipld.ReprKind_Link:   "Link",
+		}),
 	))
 
 	if errs := ts.ValidateGraph(); errs != nil {
 		for _, err := range errs {
 			fmt.Printf("- %s\n", err)
 		}
-		panic("not happening")
+		os.Exit(1)
 	}
 
 	gengo.Generate(".", "hamt", ts, adjCfg)
