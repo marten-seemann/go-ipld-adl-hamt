@@ -18,10 +18,12 @@ func (b *builder) Reset()           { b.node = nil }
 
 func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
 	b.node = &Node{
-		hashAlg:    b.hashAlg,
-		bucketSize: b.bucketSize,
+		_HashMapRoot: _HashMapRoot{
+			hashAlg:    _String{b.hashAlg},
+			bucketSize: _Int{b.bucketSize},
+		},
 	}
-	return assembler{&b.node._InteriorNode}, nil
+	return assembler{&b.node._HashMapRoot}, nil
 }
 func (b *builder) BeginList(sizeHint int) (ipld.ListAssembler, error) { return nil, nil }
 func (b *builder) AssignNull() error                                  { return nil }
@@ -35,7 +37,7 @@ func (b *builder) AssignNode(ipld.Node) error                         { return n
 func (b *builder) Prototype() ipld.NodePrototype                      { return nil }
 
 type assembler struct {
-	node *_InteriorNode
+	node *_HashMapRoot
 }
 
 func (a assembler) AssembleKey() ipld.NodeAssembler {

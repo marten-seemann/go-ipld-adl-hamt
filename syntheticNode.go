@@ -7,11 +7,7 @@ import "github.com/ipld/go-ipld-prime"
 // var _ ipld.Node = (*Node)(nil)
 
 type Node struct {
-	// TODO(mvdan): shouldn't these be in the schema?
-	hashAlg    string
-	bucketSize int
-
-	_InteriorNode
+	_HashMapRoot
 }
 
 var _ ipld.NodePrototype = (*Prototype)(nil)
