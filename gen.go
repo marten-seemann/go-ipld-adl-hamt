@@ -16,7 +16,8 @@ func main() {
 	ts.Init()
 	adjCfg := &gengo.AdjunctCfg{
 		CfgUnionMemlayout: map[schema.TypeName]string{
-			"Any": "interface",
+			"Any":     "interface",
+			"Element": "interface",
 		},
 		FieldSymbolLowerOverrides: map[gengo.FieldTuple]string{
 			{TypeName: "HashMapRoot", FieldName: "map"}: "_map",
