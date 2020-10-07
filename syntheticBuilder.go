@@ -7,21 +7,39 @@ import (
 	"github.com/ipld/go-ipld-prime"
 	basicnode "github.com/ipld/go-ipld-prime/node/basic"
 	"github.com/ipld/go-ipld-prime/node/mixins"
-	"github.com/twmb/murmur3"
 )
-
-const bitWidth = 3 // TODO: configurable?
-
-// TODO : the synthetic NodeBuilder + NodeAssembler that act like a single unified map go here
 
 var (
 	_ = fmt.Sprint
 	_ = os.Stdout
 )
 
+var _ ipld.NodePrototype = (*Prototype)(nil)
+
+type Prototype struct {
+	BitWidth   int
+	HashAlg    string
+	BucketSize int
+}
+
+func (p Prototype) NewBuilder() ipld.NodeBuilder {
+	if p.BitWidth < 8 {
+		p.BitWidth = 8
+	}
+	if p.BucketSize < 1 {
+		p.BucketSize = 1
+	}
+	return &builder{
+		bitWidth:   p.BitWidth,
+		hashAlg:    p.HashAlg,
+		bucketSize: p.BucketSize,
+	}
+}
+
 var _ ipld.NodeBuilder = (*builder)(nil)
 
 type builder struct {
+	bitWidth   int
 	hashAlg    string
 	bucketSize int
 
@@ -36,10 +54,10 @@ func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
 		_HashMapRoot: _HashMapRoot{
 			hashAlg:    _String{b.hashAlg},
 			bucketSize: _Int{b.bucketSize},
-			_map:       _Bytes{make([]byte, 2<<bitWidth)},
+			_map:       _Bytes{make([]byte, 1<<(b.bitWidth-3))},
 		},
 	}
-	return &assembler{&b.node._HashMapRoot}, nil
+	return &assembler{node: b.node}, nil
 }
 func (b *builder) BeginList(sizeHint int) (ipld.ListAssembler, error) { panic("todo: error?") }
 func (b *builder) AssignNull() error                                  { panic("todo: error?") }
@@ -53,7 +71,9 @@ func (b *builder) AssignNode(ipld.Node) error                         { panic("t
 func (b *builder) Prototype() ipld.NodePrototype                      { panic("todo: error?") }
 
 type assembler struct {
-	node *_HashMapRoot
+	node *Node
+
+	assemblingKey []byte
 }
 
 type assembleState uint8
@@ -123,29 +143,7 @@ func (a keyAssembler) AssignString(s string) error {
 }
 
 func (a keyAssembler) AssignBytes(b []byte) error {
-	depth := 0
-
-	hasher := murmur3.New128() // TODO: configurable
-	hasher.Write(b)
-	h := hasher.Sum(nil)
-
-	from := depth * bitWidth
-	index := rangedInt(h, from, from+bitWidth)
-	// fmt.Fprintf(os.Stderr, "%x\n", h)
-	// println("index:", index)
-
-	node := a.parent.node
-	dataIndex := onesCountRange(node._map.x, index)
-	exists := bitsetGet(node._map.x, index)
-	if !exists {
-		bucket := _Bucket{[]_BucketEntry{{
-			_Bytes{b},
-			_Value{},
-		}}}
-		node.data.x = append(node.data.x[:dataIndex], append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
-	} else {
-	}
-
+	a.parent.assemblingKey = b
 	return nil
 }
 
@@ -194,12 +192,19 @@ func (valueAssembler) AssignFloat(float64) error {
 }
 
 func (a valueAssembler) AssignString(s string) error {
-	return a.AssignBytes([]byte(s))
+	builder := _Value__ReprPrototype{}.NewBuilder()
+	if err := builder.AssignString(s); err != nil {
+		return err
+	}
+	return a.AssignNode(builder.Build())
 }
 
 func (a valueAssembler) AssignBytes(b []byte) error {
-	// TODO do work
-	return nil
+	builder := _Value__ReprPrototype{}.NewBuilder()
+	if err := builder.AssignBytes(b); err != nil {
+		return err
+	}
+	return a.AssignNode(builder.Build())
 }
 
 func (valueAssembler) AssignLink(ipld.Link) error {
@@ -207,11 +212,19 @@ func (valueAssembler) AssignLink(ipld.Link) error {
 }
 
 func (a valueAssembler) AssignNode(v ipld.Node) error {
-	vs, err := v.AsString()
-	if err != nil {
-		return err
+	val := v.(*_Value)
+
+	key := a.parent.assemblingKey
+	if a.parent.assemblingKey == nil {
+		return fmt.Errorf("invalid key")
 	}
-	return a.AssignString(vs)
+	a.parent.assemblingKey = nil
+	hash := hashKey(key)
+
+	node := a.parent.node
+	return insertEntry(&node._map, &node.data, node.bitWidth(), 0, hash, _BucketEntry{
+		_Bytes{key}, *val,
+	})
 }
 
 func (valueAssembler) Prototype() ipld.NodePrototype {

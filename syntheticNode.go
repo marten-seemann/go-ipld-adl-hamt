@@ -1,11 +1,13 @@
 package hamt
 
 import (
+	"bytes"
+	"math/bits"
+
 	"github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/node/mixins"
+	"github.com/twmb/murmur3"
 )
-
-// TODO : the synthetic Node that acts like a single unified map goes here, and so does its Prototype and whatever Config that entails.
 
 var _ ipld.Node = (*Node)(nil)
 
@@ -13,24 +15,36 @@ type Node struct {
 	_HashMapRoot
 }
 
+func (n *Node) bitWidth() int {
+	// bitWidth is inferred from the map length via the equation:
+	//
+	//     log2(byteLength(map) x 8)
+	//
+	// Since byteLength(map) is a power of 2, we don't need the expensive
+	// float-based math.Log2; we can simply count the trailing zero bits.
+	return bits.TrailingZeros32(uint32(len(n._map.x))) + 3
+}
+
 func (*Node) ReprKind() ipld.ReprKind {
 	return ipld.ReprKind_Map
 }
 
-func (*Node) LookupByString(string) (ipld.Node, error) {
-	panic("todo")
+func (n *Node) LookupByString(s string) (ipld.Node, error) {
+	key := []byte(s)
+	hash := hashKey(key)
+	return lookupValue(&n._map, &n.data, n.bitWidth(), 0, hash, key)
 }
 
 func (*Node) LookupByNode(ipld.Node) (ipld.Node, error) {
-	panic("todo")
+	panic("TODO")
 }
 
 func (*Node) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
-	panic("todo")
+	panic("TODO")
 }
 
 func (*Node) MapIterator() ipld.MapIterator {
-	panic("todo")
+	panic("TODO")
 }
 
 func (n *Node) Length() int {
@@ -86,11 +100,46 @@ func (*Node) AsLink() (ipld.Link, error) {
 	return mixins.Map{"hamt.Node"}.AsLink()
 }
 
-var _ ipld.NodePrototype = (*Prototype)(nil)
-
-type Prototype struct {
+func hashKey(b []byte) []byte {
+	hasher := murmur3.New128() // TODO: configurable
+	hasher.Write(b)
+	return hasher.Sum(nil)
 }
 
-func (Prototype) NewBuilder() ipld.NodeBuilder {
-	return &builder{}
+func insertEntry(_map *_Bytes, data *_List__Element, bitWidth, depth int, hash []byte, entry _BucketEntry) error {
+	from := depth * bitWidth
+	index := rangedInt(hash, from, from+bitWidth)
+
+	dataIndex := onesCountRange(_map.x, index)
+	exists := bitsetGet(_map.x, index)
+	if !exists {
+		bucket := _Bucket{[]_BucketEntry{entry}}
+		data.x = append(data.x[:dataIndex], append([]_Element{{bucket}}, data.x[dataIndex:]...)...)
+		bitsetSet(_map.x, index)
+	} else {
+		panic("TODO")
+	}
+	return nil
+}
+
+func lookupValue(_map *_Bytes, data *_List__Element, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
+	from := depth * bitWidth
+	index := rangedInt(hash, from, from+bitWidth)
+
+	exists := bitsetGet(_map.x, index)
+	if !exists {
+		return nil, nil
+	}
+	dataIndex := onesCountRange(_map.x, index)
+	switch element := data.x[dataIndex].x.(type) {
+	case _Bucket:
+		for _, entry := range element.x {
+			if bytes.Equal(entry.key.x, key) {
+				return entry.value.Representation(), nil
+			}
+		}
+	default:
+		panic("TODO")
+	}
+	return nil, nil
 }

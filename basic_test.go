@@ -20,4 +20,10 @@ func TestBasic(t *testing.T) {
 	node := builder.Build()
 
 	qt.Assert(t, node.Length(), qt.Equals, 1)
+
+	val, err := node.LookupByString("foo")
+	qt.Assert(t, err, qt.IsNil)
+	valStr, err := val.AsString()
+	qt.Assert(t, err, qt.IsNil)
+	qt.Assert(t, valStr, qt.Equals, "bar")
 }
