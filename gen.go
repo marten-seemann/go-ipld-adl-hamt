@@ -20,7 +20,6 @@ func main() {
 			"Element": "interface",
 		},
 		FieldSymbolLowerOverrides: map[gengo.FieldTuple]string{
-			{TypeName: "HashMapRoot", FieldName: "map"}: "_map",
 			{TypeName: "HashMapNode", FieldName: "map"}: "_map",
 		},
 	}
@@ -64,10 +63,9 @@ func main() {
 	// The schema below follows https://github.com/ipld/specs/blob/master/data-structures/hashmap.md.
 	ts.Accumulate(schema.SpawnStruct("HashMapRoot",
 		[]schema.StructField{
-			schema.SpawnStructField("hashAlg", "String", false, false),
+			schema.SpawnStructField("hashAlg", "Int", false, false),
 			schema.SpawnStructField("bucketSize", "Int", false, false),
-			schema.SpawnStructField("map", "Bytes", false, false),
-			schema.SpawnStructField("data", "List__Element", false, false),
+			schema.SpawnStructField("hamt", "HashMapNode", false, false),
 		},
 		schema.StructRepresentation_Map{},
 	))
@@ -102,31 +100,9 @@ func main() {
 	ts.Accumulate(schema.SpawnStruct("BucketEntry",
 		[]schema.StructField{
 			schema.SpawnStructField("key", "Bytes", false, false),
-			schema.SpawnStructField("value", "Value", false, false),
+			schema.SpawnStructField("value", "Any", false, false),
 		},
 		schema.StructRepresentation_Tuple{},
-	))
-	ts.Accumulate(schema.SpawnUnion("Value",
-		[]schema.TypeName{
-			"Bool",
-			"Int",
-			"Float",
-			"String",
-			"Bytes",
-			"Map",
-			"List",
-			"Link",
-		},
-		schema.SpawnUnionRepresentationKinded(map[ipld.ReprKind]schema.TypeName{
-			ipld.ReprKind_Bool:   "Bool",
-			ipld.ReprKind_Int:    "Int",
-			ipld.ReprKind_Float:  "Float",
-			ipld.ReprKind_String: "String",
-			ipld.ReprKind_Bytes:  "Bytes",
-			ipld.ReprKind_Map:    "Map",
-			ipld.ReprKind_List:   "List",
-			ipld.ReprKind_Link:   "Link",
-		}),
 	))
 
 	if errs := ts.ValidateGraph(); errs != nil {

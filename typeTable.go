@@ -45,6 +45,4 @@ type typeSlab struct {
 	Map__Repr               _Map__ReprPrototype
 	String                  _String__Prototype
 	String__Repr            _String__ReprPrototype
-	Value                   _Value__Prototype
-	Value__Repr             _Value__ReprPrototype
 }

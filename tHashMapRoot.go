@@ -9,24 +9,20 @@ import (
 )
 
 type _HashMapRoot struct {
-	hashAlg    _String
+	hashAlg    _Int
 	bucketSize _Int
-	_map       _Bytes
-	data       _List__Element
+	hamt       _HashMapNode
 }
 type HashMapRoot = *_HashMapRoot
 
-func (n _HashMapRoot) FieldHashAlg() String {
+func (n _HashMapRoot) FieldHashAlg() Int {
 	return &n.hashAlg
 }
 func (n _HashMapRoot) FieldBucketSize() Int {
 	return &n.bucketSize
 }
-func (n _HashMapRoot) FieldMap() Bytes {
-	return &n._map
-}
-func (n _HashMapRoot) FieldData() List__Element {
-	return &n.data
+func (n _HashMapRoot) FieldHamt() HashMapNode {
+	return &n.hamt
 }
 
 type _HashMapRoot__Maybe struct {
@@ -66,8 +62,7 @@ func (m MaybeHashMapRoot) Must() HashMapRoot {
 var (
 	fieldName__HashMapRoot_HashAlg    = _String{"hashAlg"}
 	fieldName__HashMapRoot_BucketSize = _String{"bucketSize"}
-	fieldName__HashMapRoot_Map        = _String{"map"}
-	fieldName__HashMapRoot_Data       = _String{"data"}
+	fieldName__HashMapRoot_Hamt       = _String{"hamt"}
 )
 var _ ipld.Node = (HashMapRoot)(&_HashMapRoot{})
 var _ schema.TypedNode = (HashMapRoot)(&_HashMapRoot{})
@@ -81,10 +76,8 @@ func (n HashMapRoot) LookupByString(key string) (ipld.Node, error) {
 		return &n.hashAlg, nil
 	case "bucketSize":
 		return &n.bucketSize, nil
-	case "map":
-		return &n._map, nil
-	case "data":
-		return &n.data, nil
+	case "hamt":
+		return &n.hamt, nil
 	default:
 		return nil, schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfString(key)}
 	}
@@ -112,7 +105,7 @@ type _HashMapRoot__MapItr struct {
 }
 
 func (itr *_HashMapRoot__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
-	if itr.idx >= 4 {
+	if itr.idx >= 3 {
 		return nil, nil, ipld.ErrIteratorOverread{}
 	}
 	switch itr.idx {
@@ -123,11 +116,8 @@ func (itr *_HashMapRoot__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 		k = &fieldName__HashMapRoot_BucketSize
 		v = &itr.n.bucketSize
 	case 2:
-		k = &fieldName__HashMapRoot_Map
-		v = &itr.n._map
-	case 3:
-		k = &fieldName__HashMapRoot_Data
-		v = &itr.n.data
+		k = &fieldName__HashMapRoot_Hamt
+		v = &itr.n.hamt
 	default:
 		panic("unreachable")
 	}
@@ -135,14 +125,14 @@ func (itr *_HashMapRoot__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 	return
 }
 func (itr *_HashMapRoot__MapItr) Done() bool {
-	return itr.idx >= 4
+	return itr.idx >= 3
 }
 
 func (HashMapRoot) ListIterator() ipld.ListIterator {
 	return nil
 }
 func (HashMapRoot) Length() int {
-	return 4
+	return 3
 }
 func (HashMapRoot) IsAbsent() bool {
 	return false
@@ -204,10 +194,9 @@ type _HashMapRoot__Assembler struct {
 	f     int
 
 	cm            schema.Maybe
-	ca_hashAlg    _String__Assembler
+	ca_hashAlg    _Int__Assembler
 	ca_bucketSize _Int__Assembler
-	ca__map       _Bytes__Assembler
-	ca_data       _List__Element__Assembler
+	ca_hamt       _HashMapNode__Assembler
 }
 
 func (na *_HashMapRoot__Assembler) reset() {
@@ -215,16 +204,14 @@ func (na *_HashMapRoot__Assembler) reset() {
 	na.s = 0
 	na.ca_hashAlg.reset()
 	na.ca_bucketSize.reset()
-	na.ca__map.reset()
-	na.ca_data.reset()
+	na.ca_hamt.reset()
 }
 
 var (
 	fieldBit__HashMapRoot_HashAlg     = 1 << 0
 	fieldBit__HashMapRoot_BucketSize  = 1 << 1
-	fieldBit__HashMapRoot_Map         = 1 << 2
-	fieldBit__HashMapRoot_Data        = 1 << 3
-	fieldBits__HashMapRoot_sufficient = 0 + 1<<0 + 1<<1 + 1<<2 + 1<<3
+	fieldBit__HashMapRoot_Hamt        = 1 << 2
+	fieldBits__HashMapRoot_sufficient = 0 + 1<<0 + 1<<1 + 1<<2
 )
 
 func (na *_HashMapRoot__Assembler) BeginMap(int) (ipld.MapAssembler, error) {
@@ -341,17 +328,7 @@ func (ma *_HashMapRoot__Assembler) valueFinishTidy() bool {
 	case 2:
 		switch ma.cm {
 		case schema.Maybe_Value:
-			ma.ca__map.w = nil
-			ma.cm = schema.Maybe_Absent
-			ma.state = maState_initial
-			return true
-		default:
-			return false
-		}
-	case 3:
-		switch ma.cm {
-		case schema.Maybe_Value:
-			ma.ca_data.w = nil
+			ma.ca_hamt.w = nil
 			ma.cm = schema.Maybe_Absent
 			ma.state = maState_initial
 			return true
@@ -398,26 +375,16 @@ func (ma *_HashMapRoot__Assembler) AssembleEntry(k string) (ipld.NodeAssembler, 
 		ma.ca_bucketSize.w = &ma.w.bucketSize
 		ma.ca_bucketSize.m = &ma.cm
 		return &ma.ca_bucketSize, nil
-	case "map":
-		if ma.s&fieldBit__HashMapRoot_Map != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Map}
+	case "hamt":
+		if ma.s&fieldBit__HashMapRoot_Hamt != 0 {
+			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Hamt}
 		}
-		ma.s += fieldBit__HashMapRoot_Map
+		ma.s += fieldBit__HashMapRoot_Hamt
 		ma.state = maState_midValue
 		ma.f = 2
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map, nil
-	case "data":
-		if ma.s&fieldBit__HashMapRoot_Data != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Data}
-		}
-		ma.s += fieldBit__HashMapRoot_Data
-		ma.state = maState_midValue
-		ma.f = 3
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data, nil
+		ma.ca_hamt.w = &ma.w.hamt
+		ma.ca_hamt.m = &ma.cm
+		return &ma.ca_hamt, nil
 	default:
 		return nil, ipld.ErrInvalidKey{TypeName: "hamt.HashMapRoot", Key: &_String{k}}
 	}
@@ -464,13 +431,9 @@ func (ma *_HashMapRoot__Assembler) AssembleValue() ipld.NodeAssembler {
 		ma.ca_bucketSize.m = &ma.cm
 		return &ma.ca_bucketSize
 	case 2:
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map
-	case 3:
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data
+		ma.ca_hamt.w = &ma.w.hamt
+		ma.ca_hamt.m = &ma.cm
+		return &ma.ca_hamt
 	default:
 		panic("unreachable")
 	}
@@ -541,20 +504,13 @@ func (ka *_HashMapRoot__KeyAssembler) AssignString(k string) error {
 		ka.s += fieldBit__HashMapRoot_BucketSize
 		ka.state = maState_expectValue
 		ka.f = 1
-	case "map":
-		if ka.s&fieldBit__HashMapRoot_Map != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Map}
+	case "hamt":
+		if ka.s&fieldBit__HashMapRoot_Hamt != 0 {
+			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Hamt}
 		}
-		ka.s += fieldBit__HashMapRoot_Map
+		ka.s += fieldBit__HashMapRoot_Hamt
 		ka.state = maState_expectValue
 		ka.f = 2
-	case "data":
-		if ka.s&fieldBit__HashMapRoot_Data != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Data}
-		}
-		ka.s += fieldBit__HashMapRoot_Data
-		ka.state = maState_expectValue
-		ka.f = 3
 	default:
 		return ipld.ErrInvalidKey{TypeName: "hamt.HashMapRoot", Key: &_String{k}}
 	}
@@ -588,8 +544,7 @@ type _HashMapRoot__Repr _HashMapRoot
 var (
 	fieldName__HashMapRoot_HashAlg_serial    = _String{"hashAlg"}
 	fieldName__HashMapRoot_BucketSize_serial = _String{"bucketSize"}
-	fieldName__HashMapRoot_Map_serial        = _String{"map"}
-	fieldName__HashMapRoot_Data_serial       = _String{"data"}
+	fieldName__HashMapRoot_Hamt_serial       = _String{"hamt"}
 )
 var _ ipld.Node = &_HashMapRoot__Repr{}
 
@@ -602,10 +557,8 @@ func (n *_HashMapRoot__Repr) LookupByString(key string) (ipld.Node, error) {
 		return n.hashAlg.Representation(), nil
 	case "bucketSize":
 		return n.bucketSize.Representation(), nil
-	case "map":
-		return n._map.Representation(), nil
-	case "data":
-		return n.data.Representation(), nil
+	case "hamt":
+		return n.hamt.Representation(), nil
 	default:
 		return nil, schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfString(key)}
 	}
@@ -633,7 +586,7 @@ type _HashMapRoot__ReprMapItr struct {
 }
 
 func (itr *_HashMapRoot__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
-	if itr.idx >= 4 {
+	if itr.idx >= 3 {
 		return nil, nil, ipld.ErrIteratorOverread{}
 	}
 	switch itr.idx {
@@ -644,11 +597,8 @@ func (itr *_HashMapRoot__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) 
 		k = &fieldName__HashMapRoot_BucketSize_serial
 		v = itr.n.bucketSize.Representation()
 	case 2:
-		k = &fieldName__HashMapRoot_Map_serial
-		v = itr.n._map.Representation()
-	case 3:
-		k = &fieldName__HashMapRoot_Data_serial
-		v = itr.n.data.Representation()
+		k = &fieldName__HashMapRoot_Hamt_serial
+		v = itr.n.hamt.Representation()
 	default:
 		panic("unreachable")
 	}
@@ -656,13 +606,13 @@ func (itr *_HashMapRoot__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) 
 	return
 }
 func (itr *_HashMapRoot__ReprMapItr) Done() bool {
-	return itr.idx >= 4
+	return itr.idx >= 3
 }
 func (_HashMapRoot__Repr) ListIterator() ipld.ListIterator {
 	return nil
 }
 func (rn *_HashMapRoot__Repr) Length() int {
-	l := 4
+	l := 3
 	return l
 }
 func (_HashMapRoot__Repr) IsAbsent() bool {
@@ -725,10 +675,9 @@ type _HashMapRoot__ReprAssembler struct {
 	f     int
 
 	cm            schema.Maybe
-	ca_hashAlg    _String__ReprAssembler
+	ca_hashAlg    _Int__ReprAssembler
 	ca_bucketSize _Int__ReprAssembler
-	ca__map       _Bytes__ReprAssembler
-	ca_data       _List__Element__ReprAssembler
+	ca_hamt       _HashMapNode__ReprAssembler
 }
 
 func (na *_HashMapRoot__ReprAssembler) reset() {
@@ -736,8 +685,7 @@ func (na *_HashMapRoot__ReprAssembler) reset() {
 	na.s = 0
 	na.ca_hashAlg.reset()
 	na.ca_bucketSize.reset()
-	na.ca__map.reset()
-	na.ca_data.reset()
+	na.ca_hamt.reset()
 }
 func (na *_HashMapRoot__ReprAssembler) BeginMap(int) (ipld.MapAssembler, error) {
 	switch *na.m {
@@ -857,15 +805,6 @@ func (ma *_HashMapRoot__ReprAssembler) valueFinishTidy() bool {
 		default:
 			return false
 		}
-	case 3:
-		switch ma.cm {
-		case schema.Maybe_Value:
-			ma.cm = schema.Maybe_Absent
-			ma.state = maState_initial
-			return true
-		default:
-			return false
-		}
 	default:
 		panic("unreachable")
 	}
@@ -906,26 +845,16 @@ func (ma *_HashMapRoot__ReprAssembler) AssembleEntry(k string) (ipld.NodeAssembl
 		ma.ca_bucketSize.w = &ma.w.bucketSize
 		ma.ca_bucketSize.m = &ma.cm
 		return &ma.ca_bucketSize, nil
-	case "map":
-		if ma.s&fieldBit__HashMapRoot_Map != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Map_serial}
+	case "hamt":
+		if ma.s&fieldBit__HashMapRoot_Hamt != 0 {
+			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Hamt_serial}
 		}
-		ma.s += fieldBit__HashMapRoot_Map
+		ma.s += fieldBit__HashMapRoot_Hamt
 		ma.state = maState_midValue
 		ma.f = 2
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map, nil
-	case "data":
-		if ma.s&fieldBit__HashMapRoot_Data != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Data_serial}
-		}
-		ma.s += fieldBit__HashMapRoot_Data
-		ma.state = maState_midValue
-		ma.f = 3
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data, nil
+		ma.ca_hamt.w = &ma.w.hamt
+		ma.ca_hamt.m = &ma.cm
+		return &ma.ca_hamt, nil
 	default:
 		return nil, ipld.ErrInvalidKey{TypeName: "hamt.HashMapRoot.Repr", Key: &_String{k}}
 	}
@@ -972,13 +901,9 @@ func (ma *_HashMapRoot__ReprAssembler) AssembleValue() ipld.NodeAssembler {
 		ma.ca_bucketSize.m = &ma.cm
 		return &ma.ca_bucketSize
 	case 2:
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map
-	case 3:
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data
+		ma.ca_hamt.w = &ma.w.hamt
+		ma.ca_hamt.m = &ma.cm
+		return &ma.ca_hamt
 	default:
 		panic("unreachable")
 	}
@@ -1049,20 +974,13 @@ func (ka *_HashMapRoot__ReprKeyAssembler) AssignString(k string) error {
 		ka.s += fieldBit__HashMapRoot_BucketSize
 		ka.state = maState_expectValue
 		ka.f = 1
-	case "map":
-		if ka.s&fieldBit__HashMapRoot_Map != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Map_serial}
+	case "hamt":
+		if ka.s&fieldBit__HashMapRoot_Hamt != 0 {
+			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Hamt_serial}
 		}
-		ka.s += fieldBit__HashMapRoot_Map
+		ka.s += fieldBit__HashMapRoot_Hamt
 		ka.state = maState_expectValue
 		ka.f = 2
-	case "data":
-		if ka.s&fieldBit__HashMapRoot_Data != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapRoot_Data_serial}
-		}
-		ka.s += fieldBit__HashMapRoot_Data
-		ka.state = maState_expectValue
-		ka.f = 3
 	default:
 		return ipld.ErrInvalidKey{TypeName: "hamt.HashMapRoot.Repr", Key: &_String{k}}
 	}

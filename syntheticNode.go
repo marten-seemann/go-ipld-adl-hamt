@@ -22,7 +22,7 @@ func (n *Node) bitWidth() int {
 	//
 	// Since byteLength(map) is a power of 2, we don't need the expensive
 	// float-based math.Log2; we can simply count the trailing zero bits.
-	return bits.TrailingZeros32(uint32(len(n._map.x))) + 3
+	return bits.TrailingZeros32(uint32(len(n.hamt._map.x))) + 3
 }
 
 func (*Node) ReprKind() ipld.ReprKind {
@@ -32,7 +32,7 @@ func (*Node) ReprKind() ipld.ReprKind {
 func (n *Node) LookupByString(s string) (ipld.Node, error) {
 	key := []byte(s)
 	hash := hashKey(key)
-	return lookupValue(&n._map, &n.data, n.bitWidth(), 0, hash, key)
+	return lookupValue(&n.hamt, n.bitWidth(), 0, hash, key)
 }
 
 func (*Node) LookupByNode(ipld.Node) (ipld.Node, error) {
@@ -49,7 +49,7 @@ func (*Node) MapIterator() ipld.MapIterator {
 
 func (n *Node) Length() int {
 	count := 0
-	for _, element := range n.data.x {
+	for _, element := range n.hamt.data.x {
 		switch element := element.x.(type) {
 		case _Bucket:
 			count += len(element.x)
@@ -106,32 +106,32 @@ func hashKey(b []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-func insertEntry(_map *_Bytes, data *_List__Element, bitWidth, depth int, hash []byte, entry _BucketEntry) error {
+func insertEntry(node *_HashMapNode, bitWidth, depth int, hash []byte, entry _BucketEntry) error {
 	from := depth * bitWidth
 	index := rangedInt(hash, from, from+bitWidth)
 
-	dataIndex := onesCountRange(_map.x, index)
-	exists := bitsetGet(_map.x, index)
+	dataIndex := onesCountRange(node._map.x, index)
+	exists := bitsetGet(node._map.x, index)
 	if !exists {
 		bucket := _Bucket{[]_BucketEntry{entry}}
-		data.x = append(data.x[:dataIndex], append([]_Element{{bucket}}, data.x[dataIndex:]...)...)
-		bitsetSet(_map.x, index)
+		node.data.x = append(node.data.x[:dataIndex], append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
+		bitsetSet(node._map.x, index)
 	} else {
 		panic("TODO")
 	}
 	return nil
 }
 
-func lookupValue(_map *_Bytes, data *_List__Element, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
+func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
 	from := depth * bitWidth
 	index := rangedInt(hash, from, from+bitWidth)
 
-	exists := bitsetGet(_map.x, index)
+	exists := bitsetGet(node._map.x, index)
 	if !exists {
 		return nil, nil
 	}
-	dataIndex := onesCountRange(_map.x, index)
-	switch element := data.x[dataIndex].x.(type) {
+	dataIndex := onesCountRange(node._map.x, index)
+	switch element := node.data.x[dataIndex].x.(type) {
 	case _Bucket:
 		for _, entry := range element.x {
 			if bytes.Equal(entry.key.x, key) {

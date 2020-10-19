@@ -10,14 +10,14 @@ import (
 
 type _BucketEntry struct {
 	key   _Bytes
-	value _Value
+	value _Any
 }
 type BucketEntry = *_BucketEntry
 
 func (n _BucketEntry) FieldKey() Bytes {
 	return &n.key
 }
-func (n _BucketEntry) FieldValue() Value {
+func (n _BucketEntry) FieldValue() Any {
 	return &n.value
 }
 
@@ -185,7 +185,7 @@ type _BucketEntry__Assembler struct {
 
 	cm       schema.Maybe
 	ca_key   _Bytes__Assembler
-	ca_value _Value__Assembler
+	ca_value _Any__Assembler
 }
 
 func (na *_BucketEntry__Assembler) reset() {
@@ -626,7 +626,7 @@ type _BucketEntry__ReprAssembler struct {
 
 	cm       schema.Maybe
 	ca_key   _Bytes__ReprAssembler
-	ca_value _Value__ReprAssembler
+	ca_value _Any__ReprAssembler
 }
 
 func (na *_BucketEntry__ReprAssembler) reset() {
