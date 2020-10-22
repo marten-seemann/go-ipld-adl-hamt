@@ -74,19 +74,17 @@ func main() {
 			schema.SpawnStructField("map", "Bytes", false, false),
 			schema.SpawnStructField("data", "List__Element", false, false),
 		},
-		schema.StructRepresentation_Map{},
+		schema.StructRepresentation_Tuple{},
 	))
 	ts.Accumulate(schema.SpawnList("List__Element",
 		"Element", false,
 	))
 	ts.Accumulate(schema.SpawnUnion("Element",
 		[]schema.TypeName{
-			"HashMapNode",
 			"Link__HashMapNode",
 			"Bucket",
 		},
 		schema.SpawnUnionRepresentationKinded(map[ipld.ReprKind]schema.TypeName{
-			ipld.ReprKind_Map:  "HashMapNode",
 			ipld.ReprKind_Link: "Link__HashMapNode",
 			ipld.ReprKind_List: "Bucket",
 		}),

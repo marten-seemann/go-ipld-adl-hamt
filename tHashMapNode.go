@@ -497,57 +497,60 @@ func (n HashMapNode) Representation() ipld.Node {
 
 type _HashMapNode__Repr _HashMapNode
 
-var (
-	fieldName__HashMapNode_Map_serial  = _String{"map"}
-	fieldName__HashMapNode_Data_serial = _String{"data"}
-)
 var _ ipld.Node = &_HashMapNode__Repr{}
 
 func (_HashMapNode__Repr) ReprKind() ipld.ReprKind {
-	return ipld.ReprKind_Map
+	return ipld.ReprKind_List
 }
-func (n *_HashMapNode__Repr) LookupByString(key string) (ipld.Node, error) {
-	switch key {
-	case "map":
-		return n._map.Representation(), nil
-	case "data":
-		return n.data.Representation(), nil
-	default:
-		return nil, schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfString(key)}
-	}
+func (_HashMapNode__Repr) LookupByString(string) (ipld.Node, error) {
+	return mixins.List{"hamt.HashMapNode.Repr"}.LookupByString("")
 }
 func (n *_HashMapNode__Repr) LookupByNode(key ipld.Node) (ipld.Node, error) {
-	ks, err := key.AsString()
+	ki, err := key.AsInt()
 	if err != nil {
 		return nil, err
 	}
-	return n.LookupByString(ks)
+	return n.LookupByIndex(ki)
 }
-func (_HashMapNode__Repr) LookupByIndex(idx int) (ipld.Node, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.LookupByIndex(0)
+func (n *_HashMapNode__Repr) LookupByIndex(idx int) (ipld.Node, error) {
+	switch idx {
+	case 0:
+		return n._map.Representation(), nil
+	case 1:
+		return n.data.Representation(), nil
+	default:
+		return nil, schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfInt(idx)}
+	}
 }
 func (n _HashMapNode__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
-	return n.LookupByString(seg.String())
+	i, err := seg.Index()
+	if err != nil {
+		return nil, ipld.ErrInvalidSegmentForList{TypeName: "hamt.HashMapNode.Repr", TroubleSegment: seg, Reason: err}
+	}
+	return n.LookupByIndex(i)
 }
-func (n *_HashMapNode__Repr) MapIterator() ipld.MapIterator {
-	return &_HashMapNode__ReprMapItr{n, 0}
+func (_HashMapNode__Repr) MapIterator() ipld.MapIterator {
+	return nil
+}
+func (n *_HashMapNode__Repr) ListIterator() ipld.ListIterator {
+	return &_HashMapNode__ReprListItr{n, 0}
 }
 
-type _HashMapNode__ReprMapItr struct {
+type _HashMapNode__ReprListItr struct {
 	n   *_HashMapNode__Repr
 	idx int
 }
 
-func (itr *_HashMapNode__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
+func (itr *_HashMapNode__ReprListItr) Next() (idx int, v ipld.Node, err error) {
 	if itr.idx >= 2 {
-		return nil, nil, ipld.ErrIteratorOverread{}
+		return -1, nil, ipld.ErrIteratorOverread{}
 	}
 	switch itr.idx {
 	case 0:
-		k = &fieldName__HashMapNode_Map_serial
+		idx = itr.idx
 		v = itr.n._map.Representation()
 	case 1:
-		k = &fieldName__HashMapNode_Data_serial
+		idx = itr.idx
 		v = itr.n.data.Representation()
 	default:
 		panic("unreachable")
@@ -555,12 +558,10 @@ func (itr *_HashMapNode__ReprMapItr) Next() (k ipld.Node, v ipld.Node, _ error) 
 	itr.idx++
 	return
 }
-func (itr *_HashMapNode__ReprMapItr) Done() bool {
+func (itr *_HashMapNode__ReprListItr) Done() bool {
 	return itr.idx >= 2
 }
-func (_HashMapNode__Repr) ListIterator() ipld.ListIterator {
-	return nil
-}
+
 func (rn *_HashMapNode__Repr) Length() int {
 	l := 2
 	return l
@@ -572,22 +573,22 @@ func (_HashMapNode__Repr) IsNull() bool {
 	return false
 }
 func (_HashMapNode__Repr) AsBool() (bool, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsBool()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsBool()
 }
 func (_HashMapNode__Repr) AsInt() (int, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsInt()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsInt()
 }
 func (_HashMapNode__Repr) AsFloat() (float64, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsFloat()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsFloat()
 }
 func (_HashMapNode__Repr) AsString() (string, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsString()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsString()
 }
 func (_HashMapNode__Repr) AsBytes() ([]byte, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsBytes()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsBytes()
 }
 func (_HashMapNode__Repr) AsLink() (ipld.Link, error) {
-	return mixins.Map{"hamt.HashMapNode.Repr"}.AsLink()
+	return mixins.List{"hamt.HashMapNode.Repr"}.AsLink()
 }
 func (_HashMapNode__Repr) Prototype() ipld.NodePrototype {
 	return _HashMapNode__ReprPrototype{}
@@ -620,8 +621,7 @@ func (nb *_HashMapNode__ReprBuilder) Reset() {
 type _HashMapNode__ReprAssembler struct {
 	w     *_HashMapNode
 	m     *schema.Maybe
-	state maState
-	s     int
+	state laState
 	f     int
 
 	cm      schema.Maybe
@@ -630,12 +630,15 @@ type _HashMapNode__ReprAssembler struct {
 }
 
 func (na *_HashMapNode__ReprAssembler) reset() {
-	na.state = maState_initial
-	na.s = 0
+	na.state = laState_initial
+	na.f = 0
 	na.ca__map.reset()
 	na.ca_data.reset()
 }
-func (na *_HashMapNode__ReprAssembler) BeginMap(int) (ipld.MapAssembler, error) {
+func (_HashMapNode__ReprAssembler) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.BeginMap(0)
+}
+func (na *_HashMapNode__ReprAssembler) BeginList(int) (ipld.ListAssembler, error) {
 	switch *na.m {
 	case schema.Maybe_Value, schema.Maybe_Null:
 		panic("invalid state: cannot assign into assembler that's already finished")
@@ -648,16 +651,13 @@ func (na *_HashMapNode__ReprAssembler) BeginMap(int) (ipld.MapAssembler, error) 
 	}
 	return na, nil
 }
-func (_HashMapNode__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.BeginList(0)
-}
 func (na *_HashMapNode__ReprAssembler) AssignNull() error {
 	switch *na.m {
 	case allowNull:
 		*na.m = schema.Maybe_Null
 		return nil
 	case schema.Maybe_Absent:
-		return mixins.MapAssembler{"hamt.HashMapNode.Repr.Repr"}.AssignNull()
+		return mixins.ListAssembler{"hamt.HashMapNode.Repr.Repr"}.AssignNull()
 	case schema.Maybe_Value, schema.Maybe_Null:
 		panic("invalid state: cannot assign into assembler that's already finished")
 	case midvalue:
@@ -666,22 +666,22 @@ func (na *_HashMapNode__ReprAssembler) AssignNull() error {
 	panic("unreachable")
 }
 func (_HashMapNode__ReprAssembler) AssignBool(bool) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignBool(false)
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignBool(false)
 }
 func (_HashMapNode__ReprAssembler) AssignInt(int) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignInt(0)
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignInt(0)
 }
 func (_HashMapNode__ReprAssembler) AssignFloat(float64) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignFloat(0)
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignFloat(0)
 }
 func (_HashMapNode__ReprAssembler) AssignString(string) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignString("")
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignString("")
 }
 func (_HashMapNode__ReprAssembler) AssignBytes([]byte) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignBytes(nil)
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignBytes(nil)
 }
 func (_HashMapNode__ReprAssembler) AssignLink(ipld.Link) error {
-	return mixins.MapAssembler{"hamt.HashMapNode.Repr"}.AssignLink(nil)
+	return mixins.ListAssembler{"hamt.HashMapNode.Repr"}.AssignLink(nil)
 }
 func (na *_HashMapNode__ReprAssembler) AssignNode(v ipld.Node) error {
 	if v.IsNull() {
@@ -703,16 +703,13 @@ func (na *_HashMapNode__ReprAssembler) AssignNode(v ipld.Node) error {
 		*na.m = schema.Maybe_Value
 		return nil
 	}
-	if v.ReprKind() != ipld.ReprKind_Map {
-		return ipld.ErrWrongKind{TypeName: "hamt.HashMapNode.Repr", MethodName: "AssignNode", AppropriateKind: ipld.ReprKindSet_JustMap, ActualKind: v.ReprKind()}
+	if v.ReprKind() != ipld.ReprKind_List {
+		return ipld.ErrWrongKind{TypeName: "hamt.HashMapNode.Repr", MethodName: "AssignNode", AppropriateKind: ipld.ReprKindSet_JustList, ActualKind: v.ReprKind()}
 	}
-	itr := v.MapIterator()
+	itr := v.ListIterator()
 	for !itr.Done() {
-		k, v, err := itr.Next()
+		_, v, err := itr.Next()
 		if err != nil {
-			return err
-		}
-		if err := na.AssembleKey().AssignNode(k); err != nil {
 			return err
 		}
 		if err := na.AssembleValue().AssignNode(v); err != nil {
@@ -724,22 +721,24 @@ func (na *_HashMapNode__ReprAssembler) AssignNode(v ipld.Node) error {
 func (_HashMapNode__ReprAssembler) Prototype() ipld.NodePrototype {
 	return _HashMapNode__ReprPrototype{}
 }
-func (ma *_HashMapNode__ReprAssembler) valueFinishTidy() bool {
-	switch ma.f {
+func (la *_HashMapNode__ReprAssembler) valueFinishTidy() bool {
+	switch la.f {
 	case 0:
-		switch ma.cm {
+		switch la.cm {
 		case schema.Maybe_Value:
-			ma.cm = schema.Maybe_Absent
-			ma.state = maState_initial
+			la.cm = schema.Maybe_Absent
+			la.state = laState_initial
+			la.f++
 			return true
 		default:
 			return false
 		}
 	case 1:
-		switch ma.cm {
+		switch la.cm {
 		case schema.Maybe_Value:
-			ma.cm = schema.Maybe_Absent
-			ma.state = maState_initial
+			la.cm = schema.Maybe_Absent
+			la.state = laState_initial
+			la.f++
 			return true
 		default:
 			return false
@@ -748,175 +747,49 @@ func (ma *_HashMapNode__ReprAssembler) valueFinishTidy() bool {
 		panic("unreachable")
 	}
 }
-func (ma *_HashMapNode__ReprAssembler) AssembleEntry(k string) (ipld.NodeAssembler, error) {
-	switch ma.state {
-	case maState_initial:
+func (la *_HashMapNode__ReprAssembler) AssembleValue() ipld.NodeAssembler {
+	switch la.state {
+	case laState_initial:
 		// carry on
-	case maState_midKey:
-		panic("invalid state: AssembleEntry cannot be called when in the middle of assembling another key")
-	case maState_expectValue:
-		panic("invalid state: AssembleEntry cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
-			panic("invalid state: AssembleEntry cannot be called when in the middle of assembling a value")
+	case laState_midValue:
+		if !la.valueFinishTidy() {
+			panic("invalid state: AssembleValue cannot be called when still in the middle of assembling the previous value")
 		} // if tidy success: carry on
-	case maState_finished:
-		panic("invalid state: AssembleEntry cannot be called on an assembler that's already finished")
-	}
-	switch k {
-	case "map":
-		if ma.s&fieldBit__HashMapNode_Map != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map_serial}
-		}
-		ma.s += fieldBit__HashMapNode_Map
-		ma.state = maState_midValue
-		ma.f = 0
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map, nil
-	case "data":
-		if ma.s&fieldBit__HashMapNode_Data != 0 {
-			return nil, ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Data_serial}
-		}
-		ma.s += fieldBit__HashMapNode_Data
-		ma.state = maState_midValue
-		ma.f = 1
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data, nil
-	default:
-		return nil, ipld.ErrInvalidKey{TypeName: "hamt.HashMapNode.Repr", Key: &_String{k}}
-	}
-}
-func (ma *_HashMapNode__ReprAssembler) AssembleKey() ipld.NodeAssembler {
-	switch ma.state {
-	case maState_initial:
-		// carry on
-	case maState_midKey:
-		panic("invalid state: AssembleKey cannot be called when in the middle of assembling another key")
-	case maState_expectValue:
-		panic("invalid state: AssembleKey cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
-			panic("invalid state: AssembleKey cannot be called when in the middle of assembling a value")
-		} // if tidy success: carry on
-	case maState_finished:
-		panic("invalid state: AssembleKey cannot be called on an assembler that's already finished")
-	}
-	ma.state = maState_midKey
-	return (*_HashMapNode__ReprKeyAssembler)(ma)
-}
-func (ma *_HashMapNode__ReprAssembler) AssembleValue() ipld.NodeAssembler {
-	switch ma.state {
-	case maState_initial:
-		panic("invalid state: AssembleValue cannot be called when no key is primed")
-	case maState_midKey:
-		panic("invalid state: AssembleValue cannot be called when in the middle of assembling a key")
-	case maState_expectValue:
-		// carry on
-	case maState_midValue:
-		panic("invalid state: AssembleValue cannot be called when in the middle of assembling another value")
-	case maState_finished:
+	case laState_finished:
 		panic("invalid state: AssembleValue cannot be called on an assembler that's already finished")
 	}
-	ma.state = maState_midValue
-	switch ma.f {
+	if la.f >= 2 {
+		return nil // schema.ErrNoSuchField{Type: nil /*TODO*/, Field: ipld.PathSegmentOfInt(2)} // FIXME: need an error thunking assembler!  it has returned.  sigh.
+	}
+	la.state = laState_midValue
+	switch la.f {
 	case 0:
-		ma.ca__map.w = &ma.w._map
-		ma.ca__map.m = &ma.cm
-		return &ma.ca__map
+		la.ca__map.w = &la.w._map
+		la.ca__map.m = &la.cm
+		return &la.ca__map
 	case 1:
-		ma.ca_data.w = &ma.w.data
-		ma.ca_data.m = &ma.cm
-		return &ma.ca_data
+		la.ca_data.w = &la.w.data
+		la.ca_data.m = &la.cm
+		return &la.ca_data
 	default:
 		panic("unreachable")
 	}
 }
-func (ma *_HashMapNode__ReprAssembler) Finish() error {
-	switch ma.state {
-	case maState_initial:
+func (la *_HashMapNode__ReprAssembler) Finish() error {
+	switch la.state {
+	case laState_initial:
 		// carry on
-	case maState_midKey:
-		panic("invalid state: Finish cannot be called when in the middle of assembling a key")
-	case maState_expectValue:
-		panic("invalid state: Finish cannot be called when expecting start of value assembly")
-	case maState_midValue:
-		if !ma.valueFinishTidy() {
+	case laState_midValue:
+		if !la.valueFinishTidy() {
 			panic("invalid state: Finish cannot be called when in the middle of assembling a value")
 		} // if tidy success: carry on
-	case maState_finished:
+	case laState_finished:
 		panic("invalid state: Finish cannot be called on an assembler that's already finished")
 	}
-	//FIXME check if all required fields are set
-	ma.state = maState_finished
-	*ma.m = schema.Maybe_Value
+	la.state = laState_finished
+	*la.m = schema.Maybe_Value
 	return nil
 }
-func (ma *_HashMapNode__ReprAssembler) KeyPrototype() ipld.NodePrototype {
-	return _String__Prototype{}
-}
-func (ma *_HashMapNode__ReprAssembler) ValuePrototype(k string) ipld.NodePrototype {
-	panic("todo structbuilder mapassembler repr valueprototype")
-}
-
-type _HashMapNode__ReprKeyAssembler _HashMapNode__ReprAssembler
-
-func (_HashMapNode__ReprKeyAssembler) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.BeginMap(0)
-}
-func (_HashMapNode__ReprKeyAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.BeginList(0)
-}
-func (na *_HashMapNode__ReprKeyAssembler) AssignNull() error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignNull()
-}
-func (_HashMapNode__ReprKeyAssembler) AssignBool(bool) error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignBool(false)
-}
-func (_HashMapNode__ReprKeyAssembler) AssignInt(int) error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignInt(0)
-}
-func (_HashMapNode__ReprKeyAssembler) AssignFloat(float64) error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignFloat(0)
-}
-func (ka *_HashMapNode__ReprKeyAssembler) AssignString(k string) error {
-	if ka.state != maState_midKey {
-		panic("misuse: KeyAssembler held beyond its valid lifetime")
-	}
-	switch k {
-	case "map":
-		if ka.s&fieldBit__HashMapNode_Map != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Map_serial}
-		}
-		ka.s += fieldBit__HashMapNode_Map
-		ka.state = maState_expectValue
-		ka.f = 0
-	case "data":
-		if ka.s&fieldBit__HashMapNode_Data != 0 {
-			return ipld.ErrRepeatedMapKey{&fieldName__HashMapNode_Data_serial}
-		}
-		ka.s += fieldBit__HashMapNode_Data
-		ka.state = maState_expectValue
-		ka.f = 1
-	default:
-		return ipld.ErrInvalidKey{TypeName: "hamt.HashMapNode.Repr", Key: &_String{k}}
-	}
-	return nil
-}
-func (_HashMapNode__ReprKeyAssembler) AssignBytes([]byte) error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignBytes(nil)
-}
-func (_HashMapNode__ReprKeyAssembler) AssignLink(ipld.Link) error {
-	return mixins.StringAssembler{"hamt.HashMapNode.Repr.KeyAssembler"}.AssignLink(nil)
-}
-func (ka *_HashMapNode__ReprKeyAssembler) AssignNode(v ipld.Node) error {
-	if v2, err := v.AsString(); err != nil {
-		return err
-	} else {
-		return ka.AssignString(v2)
-	}
-}
-func (_HashMapNode__ReprKeyAssembler) Prototype() ipld.NodePrototype {
-	return _String__Prototype{}
+func (la *_HashMapNode__ReprAssembler) ValuePrototype(_ int) ipld.NodePrototype {
+	panic("todo structbuilder tuplerepr valueprototype")
 }

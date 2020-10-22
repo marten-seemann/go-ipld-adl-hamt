@@ -17,7 +17,6 @@ type _Element__iface interface {
 	_Element__member()
 }
 
-func (_HashMapNode) _Element__member()       {}
 func (_Link__HashMapNode) _Element__member() {}
 func (_Bucket) _Element__member()            {}
 func (n _Element) AsInterface() _Element__iface {
@@ -59,7 +58,6 @@ func (m MaybeElement) Must() Element {
 }
 
 var (
-	memberName__Element_HashMapNode       = _String{"HashMapNode"}
 	memberName__Element_Link__HashMapNode = _String{"Link__HashMapNode"}
 	memberName__Element_Bucket            = _String{"Bucket"}
 )
@@ -71,12 +69,6 @@ func (Element) ReprKind() ipld.ReprKind {
 }
 func (n Element) LookupByString(key string) (ipld.Node, error) {
 	switch key {
-	case "HashMapNode":
-		if n2, ok := n.x.(HashMapNode); ok {
-			return n2, nil
-		} else {
-			return nil, ipld.ErrNotExists{ipld.PathSegmentOfString(key)}
-		}
 	case "Link__HashMapNode":
 		if n2, ok := n.x.(Link__HashMapNode); ok {
 			return n2, nil
@@ -120,8 +112,6 @@ func (itr *_Element__MapItr) Next() (k ipld.Node, v ipld.Node, _ error) {
 		return nil, nil, ipld.ErrIteratorOverread{}
 	}
 	switch n2 := itr.n.x.(type) {
-	case HashMapNode:
-		k, v = &memberName__Element_HashMapNode, n2
 	case Link__HashMapNode:
 		k, v = &memberName__Element_Link__HashMapNode, n2
 	case Bucket:
@@ -200,11 +190,9 @@ type _Element__Assembler struct {
 	state maState
 
 	cm  schema.Maybe
-	ca1 *_HashMapNode__Assembler
+	ca1 *_Link__HashMapNode__Assembler
 
-	ca2 *_Link__HashMapNode__Assembler
-
-	ca3 *_Bucket__Assembler
+	ca2 *_Bucket__Assembler
 	ca  uint
 }
 
@@ -218,9 +206,6 @@ func (na *_Element__Assembler) reset() {
 
 	case 2:
 		na.ca2.reset()
-
-	case 3:
-		na.ca3.reset()
 	default:
 		panic("unreachable")
 	}
@@ -344,39 +329,28 @@ func (ma *_Element__Assembler) AssembleEntry(k string) (ipld.NodeAssembler, erro
 		return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Element", Detail: "cannot add another entry -- a union can only contain one thing!"}
 	}
 	switch k {
-	case "HashMapNode":
+	case "Link__HashMapNode":
 		ma.state = maState_midValue
 		ma.ca = 1
-		x := &_HashMapNode{}
+		x := &_Link__HashMapNode{}
 		ma.w.x = x
 		if ma.ca1 == nil {
-			ma.ca1 = &_HashMapNode__Assembler{}
+			ma.ca1 = &_Link__HashMapNode__Assembler{}
 		}
 		ma.ca1.w = x
 		ma.ca1.m = &ma.cm
 		return ma.ca1, nil
-	case "Link__HashMapNode":
+	case "Bucket":
 		ma.state = maState_midValue
 		ma.ca = 2
-		x := &_Link__HashMapNode{}
+		x := &_Bucket{}
 		ma.w.x = x
 		if ma.ca2 == nil {
-			ma.ca2 = &_Link__HashMapNode__Assembler{}
+			ma.ca2 = &_Bucket__Assembler{}
 		}
 		ma.ca2.w = x
 		ma.ca2.m = &ma.cm
 		return ma.ca2, nil
-	case "Bucket":
-		ma.state = maState_midValue
-		ma.ca = 3
-		x := &_Bucket{}
-		ma.w.x = x
-		if ma.ca3 == nil {
-			ma.ca3 = &_Bucket__Assembler{}
-		}
-		ma.ca3.w = x
-		ma.ca3.m = &ma.cm
-		return ma.ca3, nil
 	default:
 		return nil, ipld.ErrInvalidKey{TypeName: "hamt.Element", Key: &_String{k}}
 	}
@@ -415,32 +389,23 @@ func (ma *_Element__Assembler) AssembleValue() ipld.NodeAssembler {
 	ma.state = maState_midValue
 	switch ma.ca {
 	case 0:
-		x := &_HashMapNode{}
+		x := &_Link__HashMapNode{}
 		ma.w.x = x
 		if ma.ca1 == nil {
-			ma.ca1 = &_HashMapNode__Assembler{}
+			ma.ca1 = &_Link__HashMapNode__Assembler{}
 		}
 		ma.ca1.w = x
 		ma.ca1.m = &ma.cm
 		return ma.ca1
 	case 1:
-		x := &_Link__HashMapNode{}
+		x := &_Bucket{}
 		ma.w.x = x
 		if ma.ca2 == nil {
-			ma.ca2 = &_Link__HashMapNode__Assembler{}
+			ma.ca2 = &_Bucket__Assembler{}
 		}
 		ma.ca2.w = x
 		ma.ca2.m = &ma.cm
 		return ma.ca2
-	case 2:
-		x := &_Bucket{}
-		ma.w.x = x
-		if ma.ca3 == nil {
-			ma.ca3 = &_Bucket__Assembler{}
-		}
-		ma.ca3.w = x
-		ma.ca3.m = &ma.cm
-		return ma.ca3
 	default:
 		panic("unreachable")
 	}
@@ -472,8 +437,6 @@ func (ma *_Element__Assembler) KeyPrototype() ipld.NodePrototype {
 }
 func (ma *_Element__Assembler) ValuePrototype(k string) ipld.NodePrototype {
 	switch k {
-	case "HashMapNode":
-		return _HashMapNode__Prototype{}
 	case "Link__HashMapNode":
 		return _Link__HashMapNode__Prototype{}
 	case "Bucket":
@@ -511,16 +474,12 @@ func (ka *_Element__KeyAssembler) AssignString(k string) error {
 		return schema.ErrNotUnionStructure{TypeName: "hamt.Element", Detail: "cannot add another entry -- a union can only contain one thing!"}
 	}
 	switch k {
-	case "HashMapNode":
+	case "Link__HashMapNode":
 		ka.ca = 1
 		ka.state = maState_expectValue
 		return nil
-	case "Link__HashMapNode":
-		ka.ca = 2
-		ka.state = maState_expectValue
-		return nil
 	case "Bucket":
-		ka.ca = 3
+		ka.ca = 2
 		ka.state = maState_expectValue
 		return nil
 	default:
@@ -557,8 +516,6 @@ var _ ipld.Node = &_Element__Repr{}
 
 func (n *_Element__Repr) ReprKind() ipld.ReprKind {
 	switch n.x.(type) {
-	case HashMapNode:
-		return ipld.ReprKind_Map
 	case Link__HashMapNode:
 		return ipld.ReprKind_Link
 	case Bucket:
@@ -568,17 +525,10 @@ func (n *_Element__Repr) ReprKind() ipld.ReprKind {
 	}
 }
 func (n *_Element__Repr) LookupByString(key string) (ipld.Node, error) {
-	switch n2 := n.x.(type) {
-	case HashMapNode:
-		return n2.Representation().LookupByString(key)
-	default:
-		return nil, ipld.ErrWrongKind{TypeName: "hamt.Element.Repr", MethodName: "LookupByString", AppropriateKind: ipld.ReprKindSet_JustMap, ActualKind: n.ReprKind()}
-	}
+	return nil, ipld.ErrWrongKind{TypeName: "hamt.Element.Repr", MethodName: "LookupByString", AppropriateKind: ipld.ReprKindSet_JustMap, ActualKind: n.ReprKind()}
 }
 func (n *_Element__Repr) LookupByNode(key ipld.Node) (ipld.Node, error) {
 	switch n2 := n.x.(type) {
-	case HashMapNode:
-		return n2.Representation().LookupByNode(key)
 	case Bucket:
 		return n2.Representation().LookupByNode(key)
 	default:
@@ -595,8 +545,6 @@ func (n *_Element__Repr) LookupByIndex(idx int) (ipld.Node, error) {
 }
 func (n *_Element__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error) {
 	switch n2 := n.x.(type) {
-	case HashMapNode:
-		return n2.Representation().LookupBySegment(seg)
 	case Bucket:
 		return n2.Representation().LookupBySegment(seg)
 	default:
@@ -604,12 +552,7 @@ func (n *_Element__Repr) LookupBySegment(seg ipld.PathSegment) (ipld.Node, error
 	}
 }
 func (n *_Element__Repr) MapIterator() ipld.MapIterator {
-	switch n2 := n.x.(type) {
-	case HashMapNode:
-		return n2.Representation().MapIterator()
-	default:
-		return nil
-	}
+	return nil
 }
 func (n *_Element__Repr) ListIterator() ipld.ListIterator {
 	switch n2 := n.x.(type) {
@@ -621,8 +564,6 @@ func (n *_Element__Repr) ListIterator() ipld.ListIterator {
 }
 func (n *_Element__Repr) Length() int {
 	switch n2 := n.x.(type) {
-	case HashMapNode:
-		return n2.Representation().Length()
 	case Bucket:
 		return n2.Representation().Length()
 	default:
@@ -689,9 +630,8 @@ func (nb *_Element__ReprBuilder) Reset() {
 type _Element__ReprAssembler struct {
 	w   *_Element
 	m   *schema.Maybe
-	ca1 *_HashMapNode__ReprAssembler
-	ca2 *_Link__HashMapNode__ReprAssembler
-	ca3 *_Bucket__ReprAssembler
+	ca1 *_Link__HashMapNode__ReprAssembler
+	ca2 *_Bucket__ReprAssembler
 	ca  uint
 }
 
@@ -703,8 +643,6 @@ func (na *_Element__ReprAssembler) reset() {
 		na.ca1.reset()
 	case 2:
 		na.ca2.reset()
-	case 3:
-		na.ca3.reset()
 	default:
 		panic("unreachable")
 	}
@@ -717,18 +655,6 @@ func (na *_Element__ReprAssembler) BeginMap(sizeHint int) (ipld.MapAssembler, er
 	case midvalue:
 		panic("invalid state: cannot assign into assembler that's already working on a larger structure!")
 	}
-	if na.w == nil {
-		na.w = &_Element{}
-	}
-	na.ca = 1
-	x := &_HashMapNode{}
-	na.w.x = x
-	if na.ca1 == nil {
-		na.ca1 = &_HashMapNode__ReprAssembler{}
-	}
-	na.ca1.w = x
-	na.ca1.m = na.m
-	return na.ca1.BeginMap(sizeHint)
 	return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Element.Repr", Detail: "BeginMap called but is not valid for any of the kinds that are valid members of this union"}
 }
 func (na *_Element__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
@@ -741,15 +667,15 @@ func (na *_Element__ReprAssembler) BeginList(sizeHint int) (ipld.ListAssembler, 
 	if na.w == nil {
 		na.w = &_Element{}
 	}
-	na.ca = 3
+	na.ca = 2
 	x := &_Bucket{}
 	na.w.x = x
-	if na.ca3 == nil {
-		na.ca3 = &_Bucket__ReprAssembler{}
+	if na.ca2 == nil {
+		na.ca2 = &_Bucket__ReprAssembler{}
 	}
-	na.ca3.w = x
-	na.ca3.m = na.m
-	return na.ca3.BeginList(sizeHint)
+	na.ca2.w = x
+	na.ca2.m = na.m
+	return na.ca2.BeginList(sizeHint)
 	return nil, schema.ErrNotUnionStructure{TypeName: "hamt.Element.Repr", Detail: "BeginList called but is not valid for any of the kinds that are valid members of this union"}
 }
 func (na *_Element__ReprAssembler) AssignNull() error {
@@ -816,15 +742,15 @@ func (na *_Element__ReprAssembler) AssignLink(v ipld.Link) error {
 	if na.w == nil {
 		na.w = &_Element{}
 	}
-	na.ca = 2
+	na.ca = 1
 	x := &_Link__HashMapNode{}
 	na.w.x = x
-	if na.ca2 == nil {
-		na.ca2 = &_Link__HashMapNode__ReprAssembler{}
+	if na.ca1 == nil {
+		na.ca1 = &_Link__HashMapNode__ReprAssembler{}
 	}
-	na.ca2.w = x
-	na.ca2.m = na.m
-	return na.ca2.AssignLink(v)
+	na.ca1.w = x
+	na.ca1.m = na.m
+	return na.ca1.AssignLink(v)
 	return schema.ErrNotUnionStructure{TypeName: "hamt.Element.Repr", Detail: "AssignLink called but is not valid for any of the kinds that are valid members of this union"}
 }
 func (na *_Element__ReprAssembler) AssignNode(v ipld.Node) error {
