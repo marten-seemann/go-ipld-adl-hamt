@@ -177,20 +177,33 @@ func (valueAssembler) BeginList(sizeHint int) (ipld.ListAssembler, error) {
 	return mixins.BytesAssembler{"bytes"}.BeginList(0)
 }
 
-func (valueAssembler) AssignNull() error {
-	return mixins.BytesAssembler{"bytes"}.AssignNull()
+func (a valueAssembler) AssignNull() error {
+	return fmt.Errorf("TODO")
+	// return a.AssignNode(ipld.Null)
 }
 
-func (valueAssembler) AssignBool(bool) error {
-	return mixins.BytesAssembler{"bytes"}.AssignBool(false)
+func (a valueAssembler) AssignBool(b bool) error {
+	builder := _Any__ReprPrototype{}.NewBuilder()
+	if err := builder.AssignBool(b); err != nil {
+		return err
+	}
+	return a.AssignNode(builder.Build())
 }
 
-func (valueAssembler) AssignInt(int) error {
-	return mixins.BytesAssembler{"bytes"}.AssignInt(0)
+func (a valueAssembler) AssignInt(i int) error {
+	builder := _Any__ReprPrototype{}.NewBuilder()
+	if err := builder.AssignInt(i); err != nil {
+		return err
+	}
+	return a.AssignNode(builder.Build())
 }
 
-func (valueAssembler) AssignFloat(float64) error {
-	return mixins.BytesAssembler{"bytes"}.AssignFloat(0)
+func (a valueAssembler) AssignFloat(f float64) error {
+	builder := _Any__ReprPrototype{}.NewBuilder()
+	if err := builder.AssignFloat(f); err != nil {
+		return err
+	}
+	return a.AssignNode(builder.Build())
 }
 
 func (a valueAssembler) AssignString(s string) error {
