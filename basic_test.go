@@ -53,6 +53,7 @@ func TestTypes(t *testing.T) {
 
 			builder := Prototype{}.NewBuilder()
 			assembler, err := builder.BeginMap(0)
+			qt.Assert(t, err, qt.IsNil)
 
 			key := fmt.Sprintf("%d", i)
 			assembler.AssembleKey().AssignString(key)

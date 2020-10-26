@@ -18,9 +18,28 @@ var _ ipld.NodePrototype = (*Prototype)(nil)
 
 type Prototype struct {
 	BitWidth   int
-	HashAlg    int
 	BucketSize int
+
+	// hashAlg requires an extra bool, because the zero value can't be used
+	// as the default behavior, since the code 0x00 is a valid multicodec
+	// code.
+	hashAlg    int
+	hashAlgSet bool
 }
+
+func (p Prototype) WithHashAlg(code int) Prototype {
+	p.hashAlg = code
+	p.hashAlgSet = true
+	return p
+}
+
+// These are some multicodec constants we need to support initially.
+// TODO: replace them with go-multicodec once the new version is ready.
+const (
+	Identity    = 0x00
+	Sha2_256    = 0x12
+	Murmur3_128 = 0x22
+)
 
 func (p Prototype) NewBuilder() ipld.NodeBuilder {
 	if p.BitWidth < 8 {
@@ -29,9 +48,12 @@ func (p Prototype) NewBuilder() ipld.NodeBuilder {
 	if p.BucketSize < 1 {
 		p.BucketSize = 1
 	}
+	if !p.hashAlgSet {
+		p.hashAlg = Murmur3_128
+	}
 	return &builder{
 		bitWidth:   p.BitWidth,
-		hashAlg:    p.HashAlg,
+		hashAlg:    p.hashAlg,
 		bucketSize: p.BucketSize,
 	}
 }
@@ -50,6 +72,11 @@ func (b *builder) Build() ipld.Node { return b.node }
 func (b *builder) Reset()           { b.node = nil }
 
 func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
+	switch b.hashAlg {
+	case Identity, Sha2_256, Murmur3_128:
+	default:
+		return nil, fmt.Errorf("unsupported hash algorithm: %x", b.hashAlg)
+	}
 	b.node = &Node{
 		_HashMapRoot: _HashMapRoot{
 			hashAlg:    _Int{b.hashAlg},
@@ -234,9 +261,9 @@ func (a valueAssembler) AssignNode(v ipld.Node) error {
 		return fmt.Errorf("invalid key")
 	}
 	a.parent.assemblingKey = nil
-	hash := hashKey(key)
-
 	node := a.parent.node
+	hash := node.hashKey(key)
+
 	return insertEntry(&node.hamt, node.bitWidth(), 0, hash, _BucketEntry{
 		_Bytes{key}, *val,
 	})

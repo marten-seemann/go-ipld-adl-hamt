@@ -2,6 +2,9 @@ package hamt
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"hash"
 	"math/bits"
 
 	"github.com/ipld/go-ipld-prime"
@@ -31,7 +34,7 @@ func (*Node) ReprKind() ipld.ReprKind {
 
 func (n *Node) LookupByString(s string) (ipld.Node, error) {
 	key := []byte(s)
-	hash := hashKey(key)
+	hash := n.hashKey(key)
 	return lookupValue(&n.hamt, n.bitWidth(), 0, hash, key)
 }
 
@@ -100,8 +103,20 @@ func (*Node) AsLink() (ipld.Link, error) {
 	return mixins.Map{"hamt.Node"}.AsLink()
 }
 
-func hashKey(b []byte) []byte {
-	hasher := murmur3.New128() // TODO: configurable
+func (n *Node) hashKey(b []byte) []byte {
+	var hasher hash.Hash
+	switch n.hashAlg.x {
+	case Identity:
+		return b
+	case Sha2_256:
+		hasher = sha256.New()
+	case Murmur3_128:
+		hasher = murmur3.New128()
+	default:
+		// TODO: could we reach this? the builder already handles this
+		// case, but other entry points like Reify don't.
+		panic(fmt.Sprintf("unsupported hash algorithm: %x", n.hashAlg.x))
+	}
 	hasher.Write(b)
 	return hasher.Sum(nil)
 }
