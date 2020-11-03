@@ -12,6 +12,49 @@ type _List struct {
 	x []_Any__Maybe
 }
 type List = *_List
+
+func (n *_List) Lookup(idx int) Any {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	if v.m == schema.Maybe_Null {
+		return nil
+	}
+	return v.v
+}
+func (n *_List) LookupMaybe(idx int) MaybeAny {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	return v
+}
+
+var _List__valueAbsent = _Any__Maybe{m: schema.Maybe_Absent}
+
+func (n List) Iterator() *List__Itr {
+	return &List__Itr{n, 0}
+}
+
+type List__Itr struct {
+	n   List
+	idx int
+}
+
+func (itr *List__Itr) Next() (idx int, v MaybeAny) {
+	if itr.idx >= len(itr.n.x) {
+		return -1, nil
+	}
+	idx = itr.idx
+	v = &itr.n.x[itr.idx]
+	itr.idx++
+	return
+}
+func (itr *List__Itr) Done() bool {
+	return itr.idx >= len(itr.n.x)
+}
+
 type _List__Maybe struct {
 	m schema.Maybe
 	v List

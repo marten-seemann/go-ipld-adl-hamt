@@ -12,6 +12,49 @@ type _Bucket struct {
 	x []_BucketEntry
 }
 type Bucket = *_Bucket
+
+func (n *_Bucket) Lookup(idx int) BucketEntry {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	return v
+}
+func (n *_Bucket) LookupMaybe(idx int) MaybeBucketEntry {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	return &_BucketEntry__Maybe{
+		m: schema.Maybe_Value,
+		v: v,
+	}
+}
+
+var _Bucket__valueAbsent = _BucketEntry__Maybe{m: schema.Maybe_Absent}
+
+func (n Bucket) Iterator() *Bucket__Itr {
+	return &Bucket__Itr{n, 0}
+}
+
+type Bucket__Itr struct {
+	n   Bucket
+	idx int
+}
+
+func (itr *Bucket__Itr) Next() (idx int, v BucketEntry) {
+	if itr.idx >= len(itr.n.x) {
+		return -1, nil
+	}
+	idx = itr.idx
+	v = &itr.n.x[itr.idx]
+	itr.idx++
+	return
+}
+func (itr *Bucket__Itr) Done() bool {
+	return itr.idx >= len(itr.n.x)
+}
+
 type _Bucket__Maybe struct {
 	m schema.Maybe
 	v Bucket

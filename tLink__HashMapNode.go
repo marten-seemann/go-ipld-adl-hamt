@@ -213,6 +213,9 @@ func (_Link__HashMapNode__Assembler) Prototype() ipld.NodePrototype {
 func (Link__HashMapNode) Type() schema.Type {
 	return nil /*TODO:typelit*/
 }
+func (Link__HashMapNode) LinkTargetNodePrototype() ipld.NodePrototype {
+	return Type.Link__HashMapNode__Repr
+}
 func (n Link__HashMapNode) Representation() ipld.Node {
 	return (*_Link__HashMapNode__Repr)(n)
 }

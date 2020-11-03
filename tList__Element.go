@@ -12,6 +12,49 @@ type _List__Element struct {
 	x []_Element
 }
 type List__Element = *_List__Element
+
+func (n *_List__Element) Lookup(idx int) Element {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	return v
+}
+func (n *_List__Element) LookupMaybe(idx int) MaybeElement {
+	if n.Length() <= idx {
+		return nil
+	}
+	v := &n.x[idx]
+	return &_Element__Maybe{
+		m: schema.Maybe_Value,
+		v: v,
+	}
+}
+
+var _List__Element__valueAbsent = _Element__Maybe{m: schema.Maybe_Absent}
+
+func (n List__Element) Iterator() *List__Element__Itr {
+	return &List__Element__Itr{n, 0}
+}
+
+type List__Element__Itr struct {
+	n   List__Element
+	idx int
+}
+
+func (itr *List__Element__Itr) Next() (idx int, v Element) {
+	if itr.idx >= len(itr.n.x) {
+		return -1, nil
+	}
+	idx = itr.idx
+	v = &itr.n.x[itr.idx]
+	itr.idx++
+	return
+}
+func (itr *List__Element__Itr) Done() bool {
+	return itr.idx >= len(itr.n.x)
+}
+
 type _List__Element__Maybe struct {
 	m schema.Maybe
 	v List__Element

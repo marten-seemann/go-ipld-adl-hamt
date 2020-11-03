@@ -18,9 +18,19 @@ type _Map__entry struct {
 	v _Any__Maybe
 }
 
+func (n *_Map) Lookup(k String) Any {
+	v, exists := n.m[*k]
+	if !exists {
+		return nil
+	}
+	if v.m == schema.Maybe_Null {
+		return nil
+	}
+	return v.v
+}
 func (n *_Map) LookupMaybe(k String) MaybeAny {
-	v, ok := n.m[*k]
-	if !ok {
+	v, exists := n.m[*k]
+	if !exists {
 		return &_Map__valueAbsent
 	}
 	return v
@@ -28,7 +38,29 @@ func (n *_Map) LookupMaybe(k String) MaybeAny {
 
 var _Map__valueAbsent = _Any__Maybe{m: schema.Maybe_Absent}
 
-// TODO generate also a plain Lookup method that doesn't box and alloc if this type contains non-nullable values!
+func (n Map) Iterator() *Map__Itr {
+	return &Map__Itr{n, 0}
+}
+
+type Map__Itr struct {
+	n   Map
+	idx int
+}
+
+func (itr *Map__Itr) Next() (k String, v MaybeAny) {
+	if itr.idx >= len(itr.n.t) {
+		return nil, nil
+	}
+	x := &itr.n.t[itr.idx]
+	k = &x.k
+	v = &x.v
+	itr.idx++
+	return
+}
+func (itr *Map__Itr) Done() bool {
+	return itr.idx >= len(itr.n.t)
+}
+
 type _Map__Maybe struct {
 	m schema.Maybe
 	v Map
