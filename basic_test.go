@@ -109,3 +109,35 @@ func TestTypes(t *testing.T) {
 	}
 
 }
+
+func TestLargeBuckets(t *testing.T) {
+	t.Parallel()
+
+	builder := Prototype{
+		BitWidth:   3,
+		BucketSize: 64,
+	}.NewBuilder()
+	assembler, err := builder.BeginMap(0)
+	qt.Assert(t, err, qt.IsNil)
+
+	const number = 100
+	for i := 0; i < number; i++ {
+		s := fmt.Sprintf("%02d", i)
+		assembler.AssembleKey().AssignString(s)
+		assembler.AssembleValue().AssignString(s)
+	}
+	assembler.Finish()
+
+	node := builder.Build()
+
+	qt.Assert(t, node.Length(), qt.Equals, number)
+
+	for i := 0; i < number; i++ {
+		s := fmt.Sprintf("%02d", i)
+		val, err := node.LookupByString(s)
+		qt.Assert(t, err, qt.IsNil)
+		valStr, err := val.AsString()
+		qt.Assert(t, err, qt.IsNil)
+		qt.Assert(t, valStr, qt.Equals, s)
+	}
+}

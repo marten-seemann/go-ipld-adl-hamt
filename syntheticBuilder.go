@@ -42,15 +42,17 @@ const (
 )
 
 func (p Prototype) NewBuilder() ipld.NodeBuilder {
-	if p.BitWidth < 8 {
+	// Set the defaults.
+	if p.BitWidth < 1 {
 		p.BitWidth = 8
 	}
 	if p.BucketSize < 1 {
-		p.BucketSize = 1
+		p.BucketSize = 3
 	}
 	if !p.hashAlgSet {
 		p.hashAlg = Murmur3_128
 	}
+
 	return &builder{
 		bitWidth:   p.BitWidth,
 		hashAlg:    p.hashAlg,
@@ -72,6 +74,9 @@ func (b *builder) Build() ipld.Node { return b.node }
 func (b *builder) Reset()           { b.node = nil }
 
 func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
+	if b.bitWidth < 3 {
+		return nil, fmt.Errorf("bitWidth must bee at least 3")
+	}
 	switch b.hashAlg {
 	case Identity, Sha2_256, Murmur3_128:
 	default:
@@ -264,7 +269,7 @@ func (a valueAssembler) AssignNode(v ipld.Node) error {
 	node := a.parent.node
 	hash := node.hashKey(key)
 
-	return insertEntry(&node.hamt, node.bitWidth(), 0, hash, _BucketEntry{
+	return insertEntry(&node.hamt, node.bitWidth(), node.bucketSize.x, 0, hash, _BucketEntry{
 		_Bytes{key}, *val,
 	})
 }

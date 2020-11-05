@@ -121,18 +121,34 @@ func (n *Node) hashKey(b []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-func insertEntry(node *_HashMapNode, bitWidth, depth int, hash []byte, entry _BucketEntry) error {
+func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byte, entry _BucketEntry) error {
 	from := depth * bitWidth
 	index := rangedInt(hash, from, from+bitWidth)
 
 	dataIndex := onesCountRange(node._map.x, index)
 	exists := bitsetGet(node._map.x, index)
 	if !exists {
+		// Insert a new bucket at dataIndex.
 		bucket := _Bucket{[]_BucketEntry{entry}}
-		node.data.x = append(node.data.x[:dataIndex], append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
+		node.data.x = append(node.data.x[:dataIndex],
+			append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
 		bitsetSet(node._map.x, index)
 	} else {
-		panic("TODO")
+		switch element := node.data.x[dataIndex].x.(type) {
+		case _Bucket:
+			if len(element.x) < bucketSize {
+				// TODO: keep this list sorted
+				element.x = append(element.x, entry)
+			} else {
+				panic("TODO")
+			}
+			node.data.x[dataIndex].x = element
+		case _Link__HashMapNode:
+			panic("TODO")
+		default:
+			panic(fmt.Sprintf("unexpected element type: %T", element))
+		}
+
 	}
 	return nil
 }
@@ -148,6 +164,8 @@ func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipl
 	dataIndex := onesCountRange(node._map.x, index)
 	switch element := node.data.x[dataIndex].x.(type) {
 	case _Bucket:
+		// TODO: to better support large buckets, should this be a
+		// binary search?
 		for _, entry := range element.x {
 			if bytes.Equal(entry.key.x, key) {
 				return entry.value.Representation(), nil
