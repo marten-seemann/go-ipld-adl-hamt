@@ -144,23 +144,41 @@ func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byt
 		node.data.x = append(node.data.x[:dataIndex],
 			append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
 		bitsetSet(node._map.x, index)
-	} else {
-		switch element := node.data.x[dataIndex].x.(type) {
-		case _Bucket:
-			if len(element.x) < bucketSize {
-				// TODO: keep this list sorted
-				element.x = append(element.x, entry)
+		return nil
+	}
+	switch element := node.data.x[dataIndex].x.(type) {
+	case _Bucket:
+		if len(element.x) < bucketSize {
+			i, _ := lookupBucketEntry(element.x, entry.key.x)
+			if i >= 0 {
+				// Replace an existing key.
+				element.x[i] = entry
 			} else {
-				panic("TODO")
+				// Add a new key.
+				// TODO: keep the list sorted
+				element.x = append(element.x, entry)
 			}
-			node.data.x[dataIndex].x = element
-		case _Link__HashMapNode:
+		} else {
 			panic("TODO")
-		default:
-			panic(fmt.Sprintf("unexpected element type: %T", element))
 		}
+		node.data.x[dataIndex].x = element
+	case _Link__HashMapNode:
+		panic("TODO")
+	default:
+		panic(fmt.Sprintf("unexpected element type: %T", element))
 	}
 	return nil
+}
+
+func lookupBucketEntry(entries []_BucketEntry, key []byte) (idx int, value _Any) {
+	// TODO: to better support large buckets, should this be a
+	// binary search?
+	for i, entry := range entries {
+		if bytes.Equal(entry.key.x, key) {
+			return i, entry.value
+		}
+	}
+	return -1, _Any{}
 }
 
 func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
@@ -174,12 +192,9 @@ func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipl
 	dataIndex := onesCountRange(node._map.x, index)
 	switch element := node.data.x[dataIndex].x.(type) {
 	case _Bucket:
-		// TODO: to better support large buckets, should this be a
-		// binary search?
-		for _, entry := range element.x {
-			if bytes.Equal(entry.key.x, key) {
-				return entry.value.Representation(), nil
-			}
+		i, value := lookupBucketEntry(element.x, key)
+		if i >= 0 {
+			return value.Representation(), nil
 		}
 	default:
 		panic("TODO")
