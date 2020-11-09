@@ -1,10 +1,15 @@
 package hamt
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"testing"
 
 	qt "github.com/frankban/quicktest"
+	"github.com/ipfs/go-cid"
+	"github.com/ipld/go-ipld-prime"
+	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
 )
 
 func TestBasic(t *testing.T) {
@@ -104,10 +109,8 @@ func TestTypes(t *testing.T) {
 
 			qt.Assert(t, err, qt.IsNil)
 			qt.Assert(t, val, qt.DeepEquals, test.value)
-
 		})
 	}
-
 }
 
 func TestLargeBuckets(t *testing.T) {
@@ -129,6 +132,59 @@ func TestLargeBuckets(t *testing.T) {
 	assembler.Finish()
 
 	node := builder.Build()
+
+	qt.Assert(t, node.Length(), qt.Equals, number)
+
+	for i := 0; i < number; i++ {
+		s := fmt.Sprintf("%02d", i)
+		val, err := node.LookupByString(s)
+		qt.Assert(t, err, qt.IsNil)
+		valStr, err := val.AsString()
+		qt.Assert(t, err, qt.IsNil)
+		qt.Assert(t, valStr, qt.Equals, s)
+	}
+}
+
+func TestLinks(t *testing.T) {
+	t.Skipf("TODO")
+	t.Parallel()
+
+	builder := Prototype{
+		BitWidth:   3,
+		BucketSize: 2,
+	}.NewBuilder()
+	assembler, err := builder.BeginMap(0)
+	qt.Assert(t, err, qt.IsNil)
+
+	const number = 20
+	for i := 0; i < number; i++ {
+		s := fmt.Sprintf("%02d", i)
+		assembler.AssembleKey().AssignString(s)
+		assembler.AssembleValue().AssignString(s)
+	}
+	assembler.Finish()
+	node := builder.Build().(*Node) // TODO: this type assertion is unfortunate
+
+	linkBuilder := cidlink.LinkBuilder{cid.Prefix{
+		Version:  1,    // Usually '1'.
+		Codec:    0x71, // dag-cbor as per multicodec
+		MhType:   0x15, // sha3-384 as per multicodec
+		MhLength: 48,   // sha3-384 hash has a 48-byte sum.
+	}}
+
+	storage := make(map[ipld.Link][]byte)
+	storer := func(ipld.LinkContext) (io.Writer, ipld.StoreCommitter, error) {
+		buf := bytes.Buffer{}
+		return &buf, func(lnk ipld.Link) error {
+			storage[lnk] = buf.Bytes()
+			return nil
+		}, nil
+	}
+	loader := func(lnk ipld.Link, _ ipld.LinkContext) (io.Reader, error) {
+		return bytes.NewReader(storage[lnk]), nil
+	}
+
+	node = node.WithLinking(linkBuilder, loader, storer)
 
 	qt.Assert(t, node.Length(), qt.Equals, number)
 

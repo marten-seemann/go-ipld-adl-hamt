@@ -16,6 +16,17 @@ var _ ipld.Node = (*Node)(nil)
 
 type Node struct {
 	_HashMapRoot
+
+	linkBuilder ipld.LinkBuilder
+	linkLoader  ipld.Loader
+	linkStorer  ipld.Storer
+}
+
+func (n Node) WithLinking(builder ipld.LinkBuilder, loader ipld.Loader, storer ipld.Storer) *Node {
+	n.linkBuilder = builder
+	n.linkLoader = loader
+	n.linkStorer = storer
+	return &n
 }
 
 func (n *Node) bitWidth() int {
@@ -148,7 +159,6 @@ func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byt
 		default:
 			panic(fmt.Sprintf("unexpected element type: %T", element))
 		}
-
 	}
 	return nil
 }
