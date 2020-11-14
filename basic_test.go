@@ -9,6 +9,7 @@ import (
 	qt "github.com/frankban/quicktest"
 	"github.com/ipfs/go-cid"
 	"github.com/ipld/go-ipld-prime"
+	_ "github.com/ipld/go-ipld-prime/codec/dagcbor"
 	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
 )
 
@@ -19,9 +20,9 @@ func TestBasic(t *testing.T) {
 	assembler, err := builder.BeginMap(0)
 	qt.Assert(t, err, qt.IsNil)
 
-	assembler.AssembleKey().AssignString("foo")
-	assembler.AssembleValue().AssignString("bar")
-	assembler.Finish()
+	qt.Assert(t, assembler.AssembleKey().AssignString("foo"), qt.IsNil)
+	qt.Assert(t, assembler.AssembleValue().AssignString("bar"), qt.IsNil)
+	qt.Assert(t, assembler.Finish(), qt.IsNil)
 
 	node := builder.Build()
 
@@ -61,7 +62,7 @@ func TestTypes(t *testing.T) {
 			qt.Assert(t, err, qt.IsNil)
 
 			key := fmt.Sprintf("%d", i)
-			assembler.AssembleKey().AssignString(key)
+			qt.Assert(t, assembler.AssembleKey().AssignString(key), qt.IsNil)
 			switch value := test.value.(type) {
 			case nil:
 				err = assembler.AssembleValue().AssignNull()
@@ -116,20 +117,17 @@ func TestTypes(t *testing.T) {
 func TestLargeBuckets(t *testing.T) {
 	t.Parallel()
 
-	builder := Prototype{
-		BitWidth:   3,
-		BucketSize: 64,
-	}.NewBuilder()
+	builder := Prototype{BitWidth: 3, BucketSize: 64}.NewBuilder()
 	assembler, err := builder.BeginMap(0)
 	qt.Assert(t, err, qt.IsNil)
 
 	const number = 100
 	for i := 0; i < number; i++ {
 		s := fmt.Sprintf("%02d", i)
-		assembler.AssembleKey().AssignString(s)
-		assembler.AssembleValue().AssignString(s)
+		qt.Assert(t, assembler.AssembleKey().AssignString(s), qt.IsNil)
+		qt.Assert(t, assembler.AssembleValue().AssignString(s), qt.IsNil)
 	}
-	assembler.Finish()
+	qt.Assert(t, assembler.Finish(), qt.IsNil)
 
 	node := builder.Build()
 
@@ -152,11 +150,11 @@ func TestReplace(t *testing.T) {
 	assembler, err := builder.BeginMap(0)
 	qt.Assert(t, err, qt.IsNil)
 
-	assembler.AssembleKey().AssignString("foo")
-	assembler.AssembleValue().AssignString("bar1")
-	assembler.AssembleKey().AssignString("foo")
-	assembler.AssembleValue().AssignString("bar2")
-	assembler.Finish()
+	qt.Assert(t, assembler.AssembleKey().AssignString("foo"), qt.IsNil)
+	qt.Assert(t, assembler.AssembleValue().AssignString("bar1"), qt.IsNil)
+	qt.Assert(t, assembler.AssembleKey().AssignString("foo"), qt.IsNil)
+	qt.Assert(t, assembler.AssembleValue().AssignString("bar2"), qt.IsNil)
+	qt.Assert(t, assembler.Finish(), qt.IsNil)
 
 	node := builder.Build()
 
@@ -170,24 +168,7 @@ func TestReplace(t *testing.T) {
 }
 
 func TestLinks(t *testing.T) {
-	t.Skipf("TODO")
 	t.Parallel()
-
-	builder := Prototype{
-		BitWidth:   3,
-		BucketSize: 2,
-	}.NewBuilder()
-	assembler, err := builder.BeginMap(0)
-	qt.Assert(t, err, qt.IsNil)
-
-	const number = 20
-	for i := 0; i < number; i++ {
-		s := fmt.Sprintf("%02d", i)
-		assembler.AssembleKey().AssignString(s)
-		assembler.AssembleValue().AssignString(s)
-	}
-	assembler.Finish()
-	node := builder.Build().(*Node) // TODO: this type assertion is unfortunate
 
 	linkBuilder := cidlink.LinkBuilder{cid.Prefix{
 		Version:  1,    // Usually '1'.
@@ -208,7 +189,20 @@ func TestLinks(t *testing.T) {
 		return bytes.NewReader(storage[lnk]), nil
 	}
 
-	node = node.WithLinking(linkBuilder, loader, storer)
+	builder := NewBuilder(Prototype{BitWidth: 3, BucketSize: 2}).
+		WithLinking(linkBuilder, loader, storer)
+
+	assembler, err := builder.BeginMap(0)
+	qt.Assert(t, err, qt.IsNil)
+
+	const number = 20
+	for i := 0; i < number; i++ {
+		s := fmt.Sprintf("%02d", i)
+		qt.Assert(t, assembler.AssembleKey().AssignString(s), qt.IsNil)
+		qt.Assert(t, assembler.AssembleValue().AssignString(s), qt.IsNil)
+	}
+	qt.Assert(t, assembler.Finish(), qt.IsNil)
+	node := Build(builder) // TODO: this type assertion is unfortunate
 
 	qt.Assert(t, node.Length(), qt.Equals, number)
 

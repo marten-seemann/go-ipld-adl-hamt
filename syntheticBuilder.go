@@ -42,38 +42,51 @@ const (
 )
 
 func (p Prototype) NewBuilder() ipld.NodeBuilder {
-	// Set the defaults.
-	if p.BitWidth < 1 {
-		p.BitWidth = 8
-	}
-	if p.BucketSize < 1 {
-		p.BucketSize = 3
-	}
-	if !p.hashAlgSet {
-		p.hashAlg = Murmur3_128
-	}
-
-	return &builder{
-		bitWidth:   p.BitWidth,
-		hashAlg:    p.hashAlg,
-		bucketSize: p.BucketSize,
-	}
+	return NewBuilder(p)
 }
 
-var _ ipld.NodeBuilder = (*builder)(nil)
+var _ ipld.NodeBuilder = (*Builder)(nil)
 
-type builder struct {
+type Builder struct {
 	bitWidth   int
 	hashAlg    int
 	bucketSize int
 
-	node *Node
+	node Node
 }
 
-func (b *builder) Build() ipld.Node { return b.node }
-func (b *builder) Reset()           { b.node = nil }
+func NewBuilder(proto Prototype) *Builder {
+	// Set the defaults.
+	if proto.BitWidth < 1 {
+		proto.BitWidth = 8
+	}
+	if proto.BucketSize < 1 {
+		proto.BucketSize = 3
+	}
+	if !proto.hashAlgSet {
+		proto.hashAlg = Murmur3_128
+	}
 
-func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
+	return &Builder{
+		bitWidth:   proto.BitWidth,
+		hashAlg:    proto.hashAlg,
+		bucketSize: proto.BucketSize,
+	}
+}
+
+func (b Builder) WithLinking(builder ipld.LinkBuilder, loader ipld.Loader, storer ipld.Storer) *Builder {
+	b.node = *b.node.WithLinking(builder, loader, storer)
+	return &b
+}
+
+func Build(builder *Builder) *Node {
+	return &builder.node
+}
+
+func (b *Builder) Build() ipld.Node { return Build(b) }
+func (b *Builder) Reset()           { b.node = Node{} }
+
+func (b *Builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
 	if b.bitWidth < 3 {
 		return nil, fmt.Errorf("bitWidth must bee at least 3")
 	}
@@ -82,27 +95,25 @@ func (b *builder) BeginMap(sizeHint int) (ipld.MapAssembler, error) {
 	default:
 		return nil, fmt.Errorf("unsupported hash algorithm: %x", b.hashAlg)
 	}
-	b.node = &Node{
-		_HashMapRoot: _HashMapRoot{
-			hashAlg:    _Int{b.hashAlg},
-			bucketSize: _Int{b.bucketSize},
-			hamt: _HashMapNode{
-				_map: _Bytes{make([]byte, 1<<(b.bitWidth-3))},
-			},
+	b.node._HashMapRoot = _HashMapRoot{
+		hashAlg:    _Int{b.hashAlg},
+		bucketSize: _Int{b.bucketSize},
+		hamt: _HashMapNode{
+			_map: _Bytes{make([]byte, 1<<(b.bitWidth-3))},
 		},
 	}
-	return &assembler{node: b.node}, nil
+	return &assembler{node: &b.node}, nil
 }
-func (b *builder) BeginList(sizeHint int) (ipld.ListAssembler, error) { panic("todo: error?") }
-func (b *builder) AssignNull() error                                  { panic("todo: error?") }
-func (b *builder) AssignBool(bool) error                              { panic("todo: error?") }
-func (b *builder) AssignInt(int) error                                { panic("todo: error?") }
-func (b *builder) AssignFloat(float64) error                          { panic("todo: error?") }
-func (b *builder) AssignString(string) error                          { panic("todo: error?") }
-func (b *builder) AssignBytes([]byte) error                           { panic("todo: error?") }
-func (b *builder) AssignLink(ipld.Link) error                         { panic("todo: error?") }
-func (b *builder) AssignNode(ipld.Node) error                         { panic("todo: error?") }
-func (b *builder) Prototype() ipld.NodePrototype                      { panic("todo: error?") }
+func (b *Builder) BeginList(sizeHint int) (ipld.ListAssembler, error) { panic("todo: error?") }
+func (b *Builder) AssignNull() error                                  { panic("todo: error?") }
+func (b *Builder) AssignBool(bool) error                              { panic("todo: error?") }
+func (b *Builder) AssignInt(int) error                                { panic("todo: error?") }
+func (b *Builder) AssignFloat(float64) error                          { panic("todo: error?") }
+func (b *Builder) AssignString(string) error                          { panic("todo: error?") }
+func (b *Builder) AssignBytes([]byte) error                           { panic("todo: error?") }
+func (b *Builder) AssignLink(ipld.Link) error                         { panic("todo: error?") }
+func (b *Builder) AssignNode(ipld.Node) error                         { panic("todo: error?") }
+func (b *Builder) Prototype() ipld.NodePrototype                      { panic("todo: error?") }
 
 type assembler struct {
 	node *Node
@@ -269,7 +280,7 @@ func (a valueAssembler) AssignNode(v ipld.Node) error {
 	node := a.parent.node
 	hash := node.hashKey(key)
 
-	return insertEntry(&node.hamt, node.bitWidth(), node.bucketSize.x, 0, hash, _BucketEntry{
+	return node.insertEntry(&node.hamt, node.bitWidth(), 0, hash, _BucketEntry{
 		_Bytes{key}, *val,
 	})
 }

@@ -2,6 +2,7 @@ package hamt
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"hash"
@@ -46,7 +47,7 @@ func (*Node) ReprKind() ipld.ReprKind {
 func (n *Node) LookupByString(s string) (ipld.Node, error) {
 	key := []byte(s)
 	hash := n.hashKey(key)
-	return lookupValue(&n.hamt, n.bitWidth(), 0, hash, key)
+	return n.lookupValue(&n.hamt, n.bitWidth(), 0, hash, key)
 }
 
 func (*Node) LookupByNode(ipld.Node) (ipld.Node, error) {
@@ -62,16 +63,36 @@ func (*Node) MapIterator() ipld.MapIterator {
 }
 
 func (n *Node) Length() int {
+	count, err := n.count(&n.hamt, n.bitWidth(), 0)
+	if err != nil {
+		panic(fmt.Sprintf("TODO: what to do with this error: %v", err))
+	}
+	return count
+}
+
+func (n *Node) count(node *_HashMapNode, bitWidth, depth int) (int, error) {
 	count := 0
-	for _, element := range n.hamt.data.x {
+	for _, element := range node.data.x {
 		switch element := element.x.(type) {
-		case _Bucket:
+		case *_Bucket:
 			count += len(element.x)
+		case *_Link__HashMapNode:
+			// TODO: cache loading links
+			b := _HashMapNode__Prototype{}.NewBuilder()
+			if err := element.x.Load(context.TODO(), ipld.LinkContext{}, b, n.linkLoader); err != nil {
+				return 0, err
+			}
+			child := b.Build().(*_HashMapNode)
+			childCount, err := n.count(child, bitWidth, depth+1)
+			if err != nil {
+				return 0, err
+			}
+			count += childCount
 		default:
 			panic("todo")
 		}
 	}
-	return count
+	return count, nil
 }
 
 func (*Node) LookupByIndex(idx int) (ipld.Node, error) {
@@ -132,7 +153,7 @@ func (n *Node) hashKey(b []byte) []byte {
 	return hasher.Sum(nil)
 }
 
-func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byte, entry _BucketEntry) error {
+func (n *Node) insertEntry(node *_HashMapNode, bitWidth, depth int, hash []byte, entry _BucketEntry) error {
 	from := depth * bitWidth
 	index := rangedInt(hash, from, from+bitWidth)
 
@@ -140,15 +161,16 @@ func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byt
 	exists := bitsetGet(node._map.x, index)
 	if !exists {
 		// Insert a new bucket at dataIndex.
-		bucket := _Bucket{[]_BucketEntry{entry}}
+		bucket := &_Bucket{[]_BucketEntry{entry}}
 		node.data.x = append(node.data.x[:dataIndex],
 			append([]_Element{{bucket}}, node.data.x[dataIndex:]...)...)
 		bitsetSet(node._map.x, index)
 		return nil
 	}
+	// TODO: fix links up the chain too
 	switch element := node.data.x[dataIndex].x.(type) {
-	case _Bucket:
-		if len(element.x) < bucketSize {
+	case *_Bucket:
+		if len(element.x) < n.bucketSize.x {
 			i, _ := lookupBucketEntry(element.x, entry.key.x)
 			if i >= 0 {
 				// Replace an existing key.
@@ -158,12 +180,37 @@ func insertEntry(node *_HashMapNode, bitWidth, bucketSize, depth int, hash []byt
 				// TODO: keep the list sorted
 				element.x = append(element.x, entry)
 			}
-		} else {
-			panic("TODO")
+			node.data.x[dataIndex].x = element
+			break
 		}
-		node.data.x[dataIndex].x = element
-	case _Link__HashMapNode:
-		panic("TODO")
+		child := &_HashMapNode{
+			_map: _Bytes{make([]byte, 1<<(bitWidth-3))},
+		}
+		for _, entry := range element.x {
+			hash := n.hashKey(entry.key.x)
+			n.insertEntry(child, bitWidth, depth+1, hash, entry)
+		}
+		n.insertEntry(child, bitWidth, depth+1, hash, entry)
+		link, err := n.linkBuilder.Build(context.TODO(), ipld.LinkContext{}, child, n.linkStorer)
+		if err != nil {
+			return err
+		}
+
+		node.data.x[dataIndex].x = &_Link__HashMapNode{link}
+	case *_Link__HashMapNode:
+		// TODO: cache loading links
+		b := _HashMapNode__Prototype{}.NewBuilder()
+		if err := element.x.Load(context.TODO(), ipld.LinkContext{}, b, n.linkLoader); err != nil {
+			return err
+		}
+		child := b.Build().(*_HashMapNode)
+		n.insertEntry(child, bitWidth, depth+1, hash, entry)
+		link, err := n.linkBuilder.Build(context.TODO(), ipld.LinkContext{}, child, n.linkStorer)
+		if err != nil {
+			return err
+		}
+
+		node.data.x[dataIndex].x = &_Link__HashMapNode{link}
 	default:
 		panic(fmt.Sprintf("unexpected element type: %T", element))
 	}
@@ -181,7 +228,7 @@ func lookupBucketEntry(entries []_BucketEntry, key []byte) (idx int, value _Any)
 	return -1, _Any{}
 }
 
-func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
+func (n *Node) lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipld.Node, error) {
 	from := depth * bitWidth
 	index := rangedInt(hash, from, from+bitWidth)
 
@@ -191,11 +238,19 @@ func lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []byte) (ipl
 	}
 	dataIndex := onesCountRange(node._map.x, index)
 	switch element := node.data.x[dataIndex].x.(type) {
-	case _Bucket:
+	case *_Bucket:
 		i, value := lookupBucketEntry(element.x, key)
 		if i >= 0 {
 			return value.Representation(), nil
 		}
+	case *_Link__HashMapNode:
+		// TODO: cache loading links
+		b := _HashMapNode__Prototype{}.NewBuilder()
+		if err := element.x.Load(context.TODO(), ipld.LinkContext{}, b, n.linkLoader); err != nil {
+			return nil, err
+		}
+		child := b.Build().(*_HashMapNode)
+		return n.lookupValue(child, bitWidth, depth+1, hash, key)
 	default:
 		panic("TODO")
 	}
