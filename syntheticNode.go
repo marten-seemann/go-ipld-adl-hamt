@@ -89,7 +89,7 @@ func (n *Node) count(node *_HashMapNode, bitWidth, depth int) (int, error) {
 			}
 			count += childCount
 		default:
-			panic("todo")
+			panic(fmt.Sprintf("unknown element type: %T", element))
 		}
 	}
 	return count, nil
@@ -252,7 +252,7 @@ func (n *Node) lookupValue(node *_HashMapNode, bitWidth, depth int, hash, key []
 		child := b.Build().(*_HashMapNode)
 		return n.lookupValue(child, bitWidth, depth+1, hash, key)
 	default:
-		panic("TODO")
+		panic(fmt.Sprintf("unknown element type: %T", element))
 	}
 	return nil, nil
 }

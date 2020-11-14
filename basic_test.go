@@ -202,7 +202,7 @@ func TestLinks(t *testing.T) {
 		qt.Assert(t, assembler.AssembleValue().AssignString(s), qt.IsNil)
 	}
 	qt.Assert(t, assembler.Finish(), qt.IsNil)
-	node := Build(builder) // TODO: this type assertion is unfortunate
+	node := Build(builder)
 
 	qt.Assert(t, node.Length(), qt.Equals, number)
 
